@@ -1,0 +1,3 @@
+[submodule "coela_core/test_resources"]
+	path = coela_core/test_resources
+	url = git@bitbucket.org:timstaley/coela-test-resources.git
