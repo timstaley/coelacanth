@@ -1,0 +1,22 @@
+
+#include <cassert> //unfortunately no way to use these inlined bounds checking asserts
+                    //without propagating this include everywhere. Ach.
+
+namespace coela{
+
+template<typename T>
+inline const T& PixelArray2d<T>::operator() (const int x, const int y) const{
+    assert( ((int)hdr.x_dim()*(y-1) + (x-1)) >=0);
+    assert((hdr.x_dim()*(y-1) + (x-1)) < hdr.n_pixels() );
+    return data_[hdr.x_dim()*(y-1) + (x-1) ];
+}
+
+template<typename T>
+inline T & PixelArray2d<T>::operator() (const int x,const  int y){
+    assert( ((int)hdr.x_dim()*(y-1) + (x-1)) >=0); 
+    assert((hdr.x_dim()*(y-1) + (x-1)) < hdr.n_pixels() );
+    
+    return data_[hdr.x_dim()*(y-1) + (x-1) ];
+}
+
+}//end namespace lucky
