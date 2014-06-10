@@ -9,17 +9,11 @@ find_package(UnitTestpp REQUIRED)
 #library
 file(GLOB sources implementation/*.cc)
 file(GLOB headers *.h)
-add_library(coela_random ${sources})
+coela_add_library(coela_random ${sources})
     target_link_libraries(coela_random
 	     ${RNGStreams_LIBRARIES} ${UNURAN_LIBRARIES} 
 	     boost_system boost_filesystem boost_serialization
 	    )
-
-    install(TARGETS coela_random
-	    ARCHIVE DESTINATION ${LIB_FOLDER}
-	    LIBRARY DESTINATION ${LIB_FOLDER}
-    )
-
     install(FILES ${headers}
         DESTINATION ${INCLUDE_FOLDER}
     )

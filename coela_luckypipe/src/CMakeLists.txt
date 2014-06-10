@@ -18,19 +18,16 @@ find_package(TBB REQUIRED)
 file(GLOB sources implementation/*.cc)
 file(GLOB headers *.h)
 
-add_library(coela_luckypipe ${sources})
-    target_link_libraries(coela_luckypipe 
-                        coela_analysis boost_date_time
-                        optimized ${TBB_LIBRARIES}
-                        debug ${TBB_DEBUG_LIBRARIES}
-                        )
-    install(TARGETS coela_luckypipe
-	    ARCHIVE DESTINATION ${LIB_FOLDER}
-	    LIBRARY DESTINATION ${LIB_FOLDER}
-    )
-    install(FILES ${headers}
-        DESTINATION ${INCLUDE_FOLDER}
-    )
+coela_add_library(coela_luckypipe ${sources})
+target_link_libraries(coela_luckypipe 
+                    coela_analysis boost_date_time
+                    optimized ${TBB_LIBRARIES}
+                    debug ${TBB_DEBUG_LIBRARIES}
+                    )
+
+install(FILES ${headers}
+    DESTINATION ${INCLUDE_FOLDER}
+)
 
 #--------------------------------------------------------------------
 #add_python_wrapper(python-pipeline lucky_pipeline 

@@ -8,18 +8,16 @@ find_package(UnitTestpp REQUIRED)
 file(GLOB sources implementation/*.cc)
 file(GLOB headers *.h)
 
-add_library(coela_core ${sources})
-    target_link_libraries(coela_core	 
-                        coela_utility
-                        boost_system boost_filesystem
-                        )
-    install(TARGETS coela_core
-	    ARCHIVE DESTINATION ${LIB_FOLDER}
-	    LIBRARY DESTINATION ${LIB_FOLDER}
-    )
-    install(FILES ${headers}
-        DESTINATION ${INCLUDE_FOLDER}
-    )
+coela_add_library(coela_core ${sources})
+
+target_link_libraries(coela_core	 
+                    coela_utility
+                    boost_system boost_filesystem
+                    )
+
+install(FILES ${headers}
+  DESTINATION ${INCLUDE_FOLDER}
+)
 
 #--------------------------------------------------------------------
 #Unit tests

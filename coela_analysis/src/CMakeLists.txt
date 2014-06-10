@@ -11,19 +11,17 @@ find_package(UNURAN REQUIRED)
 file(GLOB sources implementation/*.cc)
 file(GLOB headers *.h)
 
-add_library(coela_analysis ${sources})
-    target_link_libraries(coela_analysis	 
-                        coela_core
-                        coela_random
-                        ${Minuit2_LIBRARIES}
-                        )
-    install(TARGETS coela_analysis
-	    ARCHIVE DESTINATION ${LIB_FOLDER}
-	    LIBRARY DESTINATION ${LIB_FOLDER}
-    )
-    install(FILES ${headers}
-        DESTINATION ${INCLUDE_FOLDER}
-    )
+coela_add_library(coela_analysis ${sources})
+
+target_link_libraries(coela_analysis	 
+                    coela_core
+                    coela_random
+                    ${Minuit2_LIBRARIES}
+                    )
+
+install(FILES ${headers}
+  DESTINATION ${INCLUDE_FOLDER}
+)
 
 #--------------------------------------------------------------------
 #Unit tests
