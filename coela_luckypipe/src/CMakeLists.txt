@@ -39,15 +39,11 @@ install(FILES ${headers}
 #Unit tests
 
 file(GLOB test_sources unit_tests/*.cc)
-add_executable(test_coela_luckypipe ${test_sources} run_coela_luckypipe_unit_tests.cc)
-    target_link_libraries(test_coela_luckypipe 
-                        coela_luckypipe 
-                        ${UnitTestpp_LIBRARIES})
-    install(TARGETS test_coela_luckypipe DESTINATION ${TEST_FOLDER})
+coela_add_test_exec(test_coela_luckypipe 
+    ${test_sources} run_coela_luckypipe_unit_tests.cc
+    )
+target_link_libraries(test_coela_luckypipe 
+                    coela_luckypipe 
+                    ${UnitTestpp_LIBRARIES})
 
-add_dependencies(check test_coela_luckypipe)
-file(MAKE_DIRECTORY ${TEST_FOLDER})
-add_test(NAME runtest_coela_luckypipe
-        WORKING_DIRECTORY ${TEST_FOLDER}
-        COMMAND  test_coela_luckypipe)
 

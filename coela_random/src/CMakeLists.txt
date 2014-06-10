@@ -10,28 +10,19 @@ find_package(UnitTestpp REQUIRED)
 file(GLOB sources implementation/*.cc)
 file(GLOB headers *.h)
 coela_add_library(coela_random ${sources})
-    target_link_libraries(coela_random
-	     ${RNGStreams_LIBRARIES} ${UNURAN_LIBRARIES} 
-	     boost_system boost_filesystem boost_serialization
-	    )
-    install(FILES ${headers}
-        DESTINATION ${INCLUDE_FOLDER}
+target_link_libraries(coela_random
+     ${RNGStreams_LIBRARIES} ${UNURAN_LIBRARIES} 
+     boost_system boost_filesystem boost_serialization
     )
+install(FILES ${headers}
+    DESTINATION ${INCLUDE_FOLDER}
+)
 #--------------------------------------------------------------------
 #Unit tests
 file(GLOB test_sources unit_tests/*.cc)
-add_executable(test_coela_random ${test_sources} run_coela_random_unit_tests.cc)
-    target_link_libraries(test_coela_random 
-                            coela_random ${UnitTestpp_LIBRARIES} )
-    install(TARGETS test_coela_random DESTINATION ${TEST_FOLDER})
-
-add_dependencies(check test_coela_random)
-
-message(STATUS "TEST_DIR=${TEST_FOLDER}")
-file(MAKE_DIRECTORY ${TEST_FOLDER})
-
-add_test(NAME runtest_coela_random
-        WORKING_DIRECTORY ${TEST_FOLDER}
-        COMMAND  test_coela_random)
-
-
+coela_add_test_exec(test_coela_random 
+    ${test_sources} run_coela_random_unit_tests.cc
+    )
+target_link_libraries(test_coela_random 
+                    coela_random ${UnitTestpp_LIBRARIES} 
+                    )

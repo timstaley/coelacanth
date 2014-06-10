@@ -27,14 +27,10 @@ install(FILES ${headers}
 #Unit tests
 
 file(GLOB test_sources unit_tests/*.cc)
-add_executable(test_coela_analysis ${test_sources} run_coela_analysis_unit_tests.cc)
-    target_link_libraries(test_coela_analysis 
-                        coela_analysis 
-                        ${UnitTestpp_LIBRARIES})
-    install(TARGETS test_coela_analysis DESTINATION ${TEST_FOLDER})
-
-add_dependencies(check test_coela_analysis)
-file(MAKE_DIRECTORY ${TEST_FOLDER})
-add_test(NAME runtest_coela_analysis
-        WORKING_DIRECTORY ${TEST_FOLDER}
-        COMMAND  test_coela_analysis)
+coela_add_test_exec(test_coela_analysis 
+    ${test_sources} run_coela_analysis_unit_tests.cc
+)
+target_link_libraries(test_coela_analysis 
+                    coela_analysis 
+                    ${UnitTestpp_LIBRARIES}
+)
