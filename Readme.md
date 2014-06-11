@@ -12,7 +12,7 @@ The hope is that it might be useful to others: either in whole, in part, or as
 a cautionary lesson in how we used to do things.
 
 #### What's the fish got to do with it?
-**Co**des for **E**MCCD and **l**ucky-imaging **a**nalysis == **COELA**, 
+<em>Co</em>des for <em>E</em>MCCD and <em>l</em>ucky-imaging <em>a</em>nalysis == *COELA* , 
 but 'coelacanth' is more memorable. 
 That, and [C++03] is a bit of a dinosaur.
 
