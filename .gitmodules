@@ -1,6 +1,6 @@
 [submodule "coela_core/test_resources"]
 	path = coela_core/test_resources
-	url = git@bitbucket.org:timstaley/coela-test-resources.git
+	url = git@github.com:timstaley/coela-test-resources.git
 [submodule "getoptpp"]
 	path = getoptpp
 	url = git@github.com:timstaley/getoptpp.git
