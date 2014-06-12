@@ -95,7 +95,6 @@ void process_n_rows(vector<FrameInfo>& frame_vec,
         img = CCDImage<float>::sub_image(img, crop_box);
 
         single_frame_hist.clear();
-        double temporal_bias;
         if (frm.bias_pedestal== 0.0) {
             frm.bias_pedestal =
                 image_cleanup::determine_bias_pedestal_from_box_in_raw_image(

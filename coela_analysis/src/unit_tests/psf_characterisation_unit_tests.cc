@@ -168,7 +168,7 @@ SUITE(psf_characterisation)
 
     TEST_FIXTURE(cone_shaped_PSF_image, test_fully_encircled_flux_estimation) {
 
-        PixelArray2d<double>& cone_img_ref = cone_img;
+//        PixelArray2d<double>& cone_img_ref = cone_img;
 
         double  fully_encircled =
             estimate_encircled_flux_at_pixel_radius(

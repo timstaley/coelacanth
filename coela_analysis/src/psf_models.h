@@ -72,7 +72,7 @@ public:
 
     uniform_psf_model(double peak_value):peak_val(peak_value) {}
 
-    double operator()(double radius_in_CCD_pix) const { return peak_val;}
+    double operator()(double /*radius_in_CCD_pix*/) const { return peak_val;}
 
     //data members
     double peak_val;

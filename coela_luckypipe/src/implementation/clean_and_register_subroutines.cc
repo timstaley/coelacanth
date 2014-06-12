@@ -222,9 +222,9 @@ CCDImage<double> create_debiased_average(
 vector< std::pair<int, double> > estimate_per_column_EM_gain(
     const vector<FrameInfo>& frms,
     const std::string& output_dir,
-    const bool use_full_fit,
+//    const bool use_full_fit,
     const PixelRange& crop_box,
-    const CCD_BoxRegion crop_region,
+//    const CCD_BoxRegion crop_region,
     const CCDImage<float>& bias_frame,
     const size_t n_frames,
     const size_t n_threads)

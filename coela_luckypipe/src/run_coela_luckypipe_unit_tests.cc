@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-int main(int argc, char** argv)
+int main()
 {
     //comment
     return UnitTest::RunAllTests();

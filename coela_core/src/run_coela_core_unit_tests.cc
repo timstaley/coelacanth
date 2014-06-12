@@ -6,7 +6,7 @@ using namespace std;
 string lucky_lib_test_resources_dir;
 
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** argv)
 {
     //comment
     cout << "Path to test resources: " << argv[1] <<endl;
