@@ -77,7 +77,10 @@ FitsHeader::FitsHeader(const FileBuffer& buf, const size_t hdr_begin_byte_offset
 void FitsHeader::write_to_file(const std::string& filename)
 {
     std::ofstream outfile(filename.c_str(), std::ios::binary);
-    if (!outfile.is_open()) { throw runtime_error("FitsHeader::save_to_file - error writing to file: "+ filename); }
+    if (!outfile.is_open()) {
+      throw runtime_error(
+          "FitsHeader::save_to_file - error writing to file: "+ filename);
+    }
 
     outfile << *this;
 

@@ -39,7 +39,8 @@ std::string pull_extension(const std::string& path);
 std::string strip_file_extension(const std::string&
                                  filename); // removes everything after and including the final '.'
 std::string strip_file_number_and_extension(const std::string& filename);
-std::string pull_filestem(const std::string& filename);
+std::string pull_filestem(const std::string& filename,
+                          const bool greedy=false);
 std::string pull_file_number_string(const std::string& filename);
 std::string strip_lead_tail_chars(const std::string& input,
                                   const std::string& strip_chars);

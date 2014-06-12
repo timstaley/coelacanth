@@ -203,13 +203,14 @@ PixelArray2d<T> PixelArray2d<T>::load_from_buffer(const FileBuffer& buf,
 
 template<typename T>
 void PixelArray2d<T>::write_to_file(const string& filename,
+                                    const FitsHeader additional_header_info,
                                     const ArrayCompressionInfo compression_inf) const
 {
     std::ofstream outfile(filename.c_str(), std::ios::binary);
     if (!outfile.is_open()) throw std::runtime_error(
             "pixel_array<T>::write_to_file - error writing to file "+ filename);
 
-    FitsHeader fht;
+    FitsHeader fht(additional_header_info);
     PixelArray2d<T>::write_header_to_fht(fht, compression_inf);
     outfile<<fht;
 

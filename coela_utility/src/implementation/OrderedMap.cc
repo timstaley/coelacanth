@@ -21,7 +21,10 @@ void OrderedMap::clear()
 
 void OrderedMap::add_key(const key_value_comment& input)
 {
-    if (key_exists(input.key) && !input.key.empty()) { throw runtime_error("Ordered map: Cannot add a key that already exists (key:"+input.key+")"); }
+    if (key_exists(input.key) && !input.key.empty()) {
+      throw runtime_error(
+          "Ordered map: Cannot add a key that already exists (key:"+input.key+")");
+    }
     else {
         table.push_back(input);
         index_map[input.key]=table.size()-1;

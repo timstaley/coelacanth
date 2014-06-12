@@ -83,6 +83,7 @@ public:
                                          const size_t hdr_begin_byte_offset=0);
 
     void write_to_file(const string& filename,
+                       const FitsHeader additional_header_info = FitsHeader(),
                        const ArrayCompressionInfo compression_inf=
                            ArrayCompressionInfo::no_compression()) const;
 

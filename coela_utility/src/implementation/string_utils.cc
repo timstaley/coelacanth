@@ -71,10 +71,15 @@ float pull_file_number(const std::string& filename)
     return atof(number_str);
 }
 
-std::string pull_filestem(const std::string& filename)
+std::string pull_filestem(const std::string& filename,
+                          const bool greedy)
 {
     string filestem = filename.substr(filename.find_last_of('/')+1);
-    filestem = filestem.substr(0, filestem.find('_'));
+    if (greedy == true){
+      filestem = filestem.substr(0, filestem.find_last_of('_'));
+    }else{
+      filestem = filestem.substr(0, filestem.find('_'));
+    }
     return filestem;
 }
 
