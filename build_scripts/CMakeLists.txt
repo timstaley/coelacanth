@@ -51,6 +51,7 @@ add_subdirectory(${COELA_TOP_DIR}/coela_analysis/src ${BIN_FOLDER}/coela_analysi
 add_subdirectory(${COELA_TOP_DIR}/coela_luckypipe/src ${BIN_FOLDER}/coela_luckypipe)
 add_subdirectory(${COELA_TOP_DIR}/getoptpp ${BIN_FOLDER}/getoptpp)
 add_subdirectory(${COELA_TOP_DIR}/luckycam_pipeline ${BIN_FOLDER}/luckycam_pipeline)
+add_subdirectory(${COELA_TOP_DIR}/examples ${BIN_FOLDER}/examples)
 
 #set(CMAKE_VERBOSE_MAKEFILE TRUE) #For debug purposes
 
