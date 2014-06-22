@@ -41,7 +41,7 @@ struct pixels {
 
 ///This refers to the subpixel co-ordinates of the original CCD array from which an image is derived.
 ///Of course, if there are multiple CCDs this will need combining with the CCD id, or... see below.
-struct CCD {
+struct ccd {
     static  string ds9_string() {return "amplifier";}
 };
 
@@ -307,17 +307,17 @@ std::istream& operator>>(std::istream& is, RectangularRegion<ref_frame>& rgn)
 //typedefs:
 
 typedef Position<coordinate_types::pixels> PixelPosition ;
-typedef Position<coordinate_types::CCD> CCD_Position ;
+typedef Position<coordinate_types::ccd> CcdPosition ;
 typedef Position<coordinate_types::mosaic> MosaicPosition ;
-typedef Position<coordinate_types::wcs> WCS_Position ;
+typedef Position<coordinate_types::wcs> WcsPosition ;
 
 typedef TwoVector<coordinate_types::pixels> PixelShift ;
-typedef TwoVector<coordinate_types::CCD> CCD_PixelShift ;
+typedef TwoVector<coordinate_types::ccd> CcdPixelShift ;
 typedef TwoVector<coordinate_types::mosaic> MosaicPixelShift ;
-typedef Position<coordinate_types::wcs> WCS_Shift;
+typedef Position<coordinate_types::wcs> WcsShift;
 
 typedef RectangularRegion<coordinate_types::pixels> PixelBoxRegion;
-typedef RectangularRegion<coordinate_types::CCD> CCD_BoxRegion;
+typedef RectangularRegion<coordinate_types::ccd> CcdBoxRegion;
 typedef RectangularRegion<coordinate_types::mosaic> MosaicBoxRegion;
 
 

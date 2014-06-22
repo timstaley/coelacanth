@@ -20,18 +20,18 @@ namespace coela {
 
 //============================================================================================================
 ///A CCD_region with a CCD ID tacked on:
-struct multi_ccd_region: public CCD_BoxRegion {
-    multi_ccd_region() {}
-    multi_ccd_region(const int cam_id, const CCD_BoxRegion& rgn): CCD_BoxRegion(rgn),
+struct MultiCcdRegion: public CcdBoxRegion {
+    MultiCcdRegion() {}
+    MultiCcdRegion(const int cam_id, const CcdBoxRegion& rgn): CcdBoxRegion(rgn),
         CCD_id(cam_id) {}
     int CCD_id;
     ///Erases the regions it pulls out
-    static vector<CCD_BoxRegion> pull_regions_for_cam_id(int cam_id,
-            vector<multi_ccd_region>& rgns);
-    static void push_regions_with_cam_id(vector<multi_ccd_region>& camera_region_list,
-                                         const vector<CCD_BoxRegion>& ccd_rgns ,int cam_id);
+    static vector<CcdBoxRegion> pull_regions_for_cam_id(int cam_id,
+            vector<MultiCcdRegion>& rgns);
+    static void push_regions_with_cam_id(vector<MultiCcdRegion>& camera_region_list,
+                                         const vector<CcdBoxRegion>& ccd_rgns ,int cam_id);
 };
-std::ostream& operator<<(std::ostream& os, const multi_ccd_region& c_rgn);
+std::ostream& operator<<(std::ostream& os, const MultiCcdRegion& c_rgn);
 
 
 

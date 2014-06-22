@@ -15,7 +15,7 @@ namespace coela {
 namespace image_cleanup {
 //=====================================================================================================================
 
-//        const CCD_BoxRegion NOT09_flat_background(360,50,1050,1040);
+//        const CcdBoxRegion NOT09_flat_background(360,50,1050,1040);
 ////        const pixel_box NOT09_crop_region(49,17,49,17 ); //xmax, ymax will be reset to input_bmp.x_dim(), y_dim
 //
 //        const float cosmic_ray_avg_multiplier =5.0;
@@ -44,7 +44,7 @@ double determine_histogram_bias_pedestal_via_thresholded_centroid(
     const HistogramType& hist,
     const double threshold_factor=0.8) ;
 
-CCDImage<float> get_CCD_default_weight_map(const CCD_calibration_info& ccd_inf);
+CcdImage<float> get_CCD_default_weight_map(const CcdCalibrationInfo& ccd_inf);
 
 //=====================================================================================================================
 }//end namespace coela::image_cleanup

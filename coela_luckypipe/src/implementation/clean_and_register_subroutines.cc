@@ -13,7 +13,7 @@ namespace coela {
 namespace clean_and_register_subroutines {
 
 
-CCDImage<float> estimate_column_bias_pattern(
+CcdImage<float> estimate_column_bias_pattern(
     const vector<FrameInfo>& frms,
     const string& output_dir,
     const PixelRange& crop_box,
@@ -25,11 +25,11 @@ CCDImage<float> estimate_column_bias_pattern(
 
     using namespace single_CCD_filters;
 
-    CCDImage<float> bias_frm;
+    CcdImage<float> bias_frm;
     bias_frm.pix = PixelArray2d<float>(crop_box.x_dim(), crop_box.y_dim(), 0.0);
-    Sequential_File_Buffer_Filter<> input_filter(frms, n_frames);
-    Decompress_Filter decompressor;
-    Frame_Count_Display_Filter count_filter(true);
+    SequentialFileBufferFilter<> input_filter(frms, n_frames);
+    DecompressFilter decompressor;
+    FrameCountDisplayFilter count_filter(true);
     FrameCropFilter crop_filter(crop_box); //Use these two if we have a good background region
 
 
@@ -37,10 +37,10 @@ CCDImage<float> estimate_column_bias_pattern(
     BiasDriftTracker drift_tracker(temporal_debiasing_box);
 
     UniformDebias db_filter;
-    Col_Histogram_Gather col_hist_filter(crop_box, 50, crop_box.y_dim());
+    ColHistogramGather col_hist_filter(crop_box, 50, crop_box.y_dim());
     col_hist_filter.set_hist_min_value(-300);
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
 
     cout<<"Initializing scheduler with " << n_threads <<" threads."<<endl;
 
@@ -90,30 +90,30 @@ CCDImage<float> estimate_column_bias_pattern(
 }
 
 
-CCDImage<float> estimate_row_bias_pattern(
+CcdImage<float> estimate_row_bias_pattern(
     const vector<FrameInfo>& frms,
     const std::string& output_dir,
     const PixelRange& crop_box,
-    const CCDImage<float>& col_bias_pattern,
+    const CcdImage<float>& col_bias_pattern,
     const size_t n_frames,
     const size_t n_threads)
 {
     using namespace single_CCD_filters;
 
-    CCDImage<float> row_bias_frm;
+    CcdImage<float> row_bias_frm;
     row_bias_frm.pix = PixelArray2d<float>(crop_box.x_dim(), crop_box.y_dim(), 0.0);
-    Sequential_File_Buffer_Filter<> input_filter(frms, n_frames);
-    Decompress_Filter decompressor;
-    Frame_Count_Display_Filter count_filter(true);
+    SequentialFileBufferFilter<> input_filter(frms, n_frames);
+    DecompressFilter decompressor;
+    FrameCountDisplayFilter count_filter(true);
     FrameCropFilter crop_filter(crop_box); //Use these two if we have a good background region
 
     UniformDebias uniform_db_filter;
     single_CCD_filters::BiasFrameSubtractor col_db_filt;
     col_db_filt.set_bias_frame(col_bias_pattern);
-    single_CCD_filters::RowHistogram_Gather row_hist_filter(crop_box, 100);
+    single_CCD_filters::RowHistogramGather row_hist_filter(crop_box, 100);
     row_hist_filter.set_hist_min_value(-300);
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
 
     cout<<"Initializing scheduler with " << n_threads <<" threads."<<endl;
 
@@ -165,27 +165,27 @@ CCDImage<float> estimate_row_bias_pattern(
 }
 
 
-CCDImage<double> create_debiased_average(
+CcdImage<double> create_debiased_average(
     const vector<FrameInfo>& frms,
     const PixelRange& crop_box,
-    const CCD_BoxRegion crop_region,
-    const CCDImage<float>& bias_frame,
+    const CcdBoxRegion crop_region,
+    const CcdImage<float>& bias_frame,
     const size_t n_frames,
     const size_t n_threads)
 {
 
     using namespace single_CCD_filters;
-    Sequential_File_Buffer_Filter<> input_filter(frms, n_frames);
-    Decompress_Filter decompressor;
-    Frame_Count_Display_Filter count_filter(true);
+    SequentialFileBufferFilter<> input_filter(frms, n_frames);
+    DecompressFilter decompressor;
+    FrameCountDisplayFilter count_filter(true);
     FrameCropFilter crop_filter(crop_box);
 
     UniformDebias uniform_db_filter;
     single_CCD_filters::BiasFrameSubtractor db_filt;
     db_filt.set_bias_frame(bias_frame);
-    single_CCD_filters::Frame_Summation sum_filter(crop_box, crop_region);
+    single_CCD_filters::FrameSummation sum_filter(crop_box, crop_region);
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
 
     cout<<"Initializing scheduler with " << n_threads <<" threads."<<endl;
 
@@ -224,26 +224,26 @@ vector< std::pair<int, double> > estimate_per_column_EM_gain(
     const std::string& output_dir,
 //    const bool use_full_fit,
     const PixelRange& crop_box,
-//    const CCD_BoxRegion crop_region,
-    const CCDImage<float>& bias_frame,
+//    const CcdBoxRegion crop_region,
+    const CcdImage<float>& bias_frame,
     const size_t n_frames,
     const size_t n_threads)
 {
 
     using namespace single_CCD_filters;
-    Sequential_File_Buffer_Filter<> input_filter(frms, n_frames);
-    Decompress_Filter decompressor;
-    Frame_Count_Display_Filter count_filter(true);
+    SequentialFileBufferFilter<> input_filter(frms, n_frames);
+    DecompressFilter decompressor;
+    FrameCountDisplayFilter count_filter(true);
     FrameCropFilter crop_filter(crop_box);
 
     UniformDebias uniform_db_filter;
     single_CCD_filters::BiasFrameSubtractor db_filt;
     db_filt.set_bias_frame(bias_frame);
-    Col_Histogram_Gather col_hist_filter(crop_box, 50, crop_box.y_dim());
+    ColHistogramGather col_hist_filter(crop_box, 50, crop_box.y_dim());
     col_hist_filter.set_hist_min_value(-300);
-//    single_CCD_filters::Frame_Summation sum_filter(crop_box, crop_region);
+//    single_CCD_filters::FrameSummation sum_filter(crop_box, crop_region);
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
 
     cout<<"Initializing scheduler with " << n_threads <<" threads."<<endl;
 
@@ -279,7 +279,7 @@ vector< std::pair<int, double> > estimate_per_column_EM_gain(
         cout<<"\r Fitting col " <<x+1 <<"\t\t"<<flush;
         col_hists[x].write_to_file(col_hists_folder+"/col"+string_utils::itoa(x)+".txt");
 //        double dark_estimate = image_cleanup::determine_histogram_bias_pedestal_via_thresholded_centroid(col_hists[x], 0.8);
-        gain_utils::gain_info col_fit = gain_utils::fit_CCD_histogram(
+        gain_utils::GainData col_fit = gain_utils::fit_CCD_histogram(
                                             col_hists[x].convert_to_value_count_map(),
                                             false
                                         );
@@ -292,7 +292,7 @@ vector< std::pair<int, double> > estimate_per_column_EM_gain(
 
 //===================================================================================
 
-psf_models::reference_psf generate_airy_core_template(
+psf_models::ReferencePsf generate_airy_core_template(
     const CameraConfigInfo& camconf,
     const int ccd_id,
     const double desired_pixel_scale_relative_to_CCD,
@@ -302,7 +302,7 @@ psf_models::reference_psf generate_airy_core_template(
 
     double rads_per_CCD_pixel =
         camconf.lens_inf.nominal_pixel_scale_in_mas*misc_math::radians_per_milliarcsecond;
-    psf_models::airy_psf_model airy_gen(
+    psf_models::AiryPsfModel airy_gen(
         100, rads_per_CCD_pixel,
         camconf.get_filter_info_for_ccd_id(ccd_id).central_wavelength_in_metres,
         camconf.lens_inf.telescope_outer_diameter,
@@ -318,7 +318,7 @@ psf_models::reference_psf generate_airy_core_template(
     }
 //        2.5*minima_radius;
 
-    psf_models::reference_psf airy_kernel =
+    psf_models::ReferencePsf airy_kernel =
         psf_models::generate_centred_psf(
             airy_gen,
             kernel_radius,
@@ -328,7 +328,7 @@ psf_models::reference_psf generate_airy_core_template(
     airy_kernel.apply_mask();
 
     airy_kernel.psf_image.pix /= airy_kernel.psf_image.pix.max_val();
-//    psf_models::reference_psf unit_airy(airy_kernel);
+//    psf_models::ReferencePsf unit_airy(airy_kernel);
     //peak is now 1.0
     double val_conv_with_unit_airy_core = spatial_convolution::detail::
                                           unsafe_convolve_with_kernel_at_Position(
@@ -348,19 +348,19 @@ psf_models::reference_psf generate_airy_core_template(
     return airy_kernel;
 }
 
-psf_models::reference_psf generate_normalised_core_template(
+psf_models::ReferencePsf generate_normalised_core_template(
     const CameraConfigInfo& camconf,
     const int ccd_id,
     const double desired_pixel_scale_relative_to_CCD
 )
 {
 
-    psf_models::reference_psf ref =
+    psf_models::ReferencePsf ref =
         generate_airy_core_template(camconf,
                                     ccd_id,
                                     desired_pixel_scale_relative_to_CCD);
 
-    psf_models::reference_psf unit_airy(ref);
+    psf_models::ReferencePsf unit_airy(ref);
     unit_airy.psf_image.pix /= unit_airy.psf_image.pix.max_val();
 
     for (PixelIterator p(ref.psf_image.pix.range()); p!=p.end; ++p) {
@@ -400,7 +400,7 @@ psf_models::reference_psf generate_normalised_core_template(
 ////    double convolved_sigma = sqrt(pixel_approx_sigma*pixel_approx_sigma +
 ////        airy_gauss_approx_sigma + airy_gauss_approx_sigma);
 ////
-////    psf_models::gaussian_psf_model g_model(0.75,
+////    psf_models::GaussianPsfModel g_model(0.75,
 ////            convolved_sigma
 ////            );
 

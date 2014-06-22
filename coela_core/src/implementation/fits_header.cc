@@ -70,7 +70,7 @@ FitsHeader::FitsHeader(const FileBuffer& buf, const size_t hdr_begin_byte_offset
     buffer_stream >> *this;
 }
 
-//FitsHeader::FitsHeader(const file_info& fi){
+//FitsHeader::FitsHeader(const FileInfo& fi){
 //    *this=FitsHeader(fi.file_path, fi.byte_offset);
 //}
 
@@ -99,10 +99,10 @@ void FitsHeader::add_comment(string comment_input)
                               fits_header_conventions::comment_prefix.size();
     const string& prefix = fits_header_conventions::comment_prefix;
     while (comment_input.size() >comment_max) {
-        entry_table.add_key(key_value_comment(prefix+comment_input.substr(0, comment_max)));
+        entry_table.add_key(KeyValueComment(prefix+comment_input.substr(0, comment_max)));
         comment_input.erase(0,comment_max);
     }
-    entry_table.add_key(key_value_comment(prefix+comment_input));
+    entry_table.add_key(KeyValueComment(prefix+comment_input));
 }
 
 void FitsHeader::add_keyword(const string& keyword, const string& value,
@@ -113,7 +113,7 @@ void FitsHeader::add_keyword(const string& keyword, const string& value,
             || key_comment.size() > fits_header_conventions::kv_comment_max) {
         throw std::runtime_error("FitsHeader::add_keyword - One of the table entries is too long for the FITS format");
     }
-    entry_table.add_key(key_value_comment(keyword,value, key_comment));
+    entry_table.add_key(KeyValueComment(keyword,value, key_comment));
 }
 
 void FitsHeader::set_keyword(const string& keyword, const string& value)
@@ -151,7 +151,7 @@ fits_header_conventions::fits_imagetype FitsHeader::FITS_imagetype() const
                get_key_value("BITPIX"));
 }
 
-string FitsHeader::make_keyword_line(const key_value_comment& entry) const
+string FitsHeader::make_keyword_line(const KeyValueComment& entry) const
 {
     string line;
     if (!entry.key.empty()) {
@@ -244,19 +244,19 @@ void FitsHeader::load_from_string_vec(const vector<string>& header_text)
 
     for (vector<string>::size_type l=0; l<header_text.size() ; ++l) {
         string line=header_text[l];  //simply for readability.
-        key_value_comment key_to_be_added("");
+        KeyValueComment key_to_be_added("");
         string keyword, value;
 
 
         //Parse for COMMENTs first since it's possible to have an equals operator in a comment:
         if (line.find("COMMENT ") == 0) {
-            key_to_be_added=key_value_comment(line) ;
+            key_to_be_added=KeyValueComment(line) ;
 //          if (fits_hdr_debug) cout <<"comment loaded" <<endl;
             entry_table.add_key(key_to_be_added);
 
         } else if (line.find("HIERARCH ") == 0) {
             //Special case; VLT/NACO images have multiple COMMENT like entries prefaced "HIERARCH":
-            key_to_be_added=key_value_comment(line) ;
+            key_to_be_added=KeyValueComment(line) ;
 //          if (fits_hdr_debug) cout <<"comment loaded" <<endl;
             entry_table.add_key(key_to_be_added);
 
@@ -280,7 +280,7 @@ void FitsHeader::load_from_string_vec(const vector<string>& header_text)
             value=value.substr(0, value.find('/'));
 //              if (value[value.size()-1]==" ") value=value.substr(0,value.size()-1);
             if (value.find_last_not_of(' ')+1 < value.size()) { value=value.substr(0, value.find_last_not_of(' ')+1); }
-            key_to_be_added=key_value_comment(keyword, value, key_comment) ;
+            key_to_be_added=KeyValueComment(keyword, value, key_comment) ;
             //NB END keyword not stored - this is appended in write to file.
             entry_table.add_key(key_to_be_added);
         }

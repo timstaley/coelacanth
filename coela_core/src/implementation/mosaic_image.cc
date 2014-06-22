@@ -8,8 +8,8 @@ template<typename T>
 MosaicImage<T>::MosaicImage() {}
 
 template<typename T>
-MosaicImage<T>::MosaicImage(const CCDImage<T>& rhs):
-    CCDImage<T>(rhs)
+MosaicImage<T>::MosaicImage(const CcdImage<T>& rhs):
+    CcdImage<T>(rhs)
 {}
 
 template<typename T>
@@ -37,7 +37,7 @@ void MosaicImage<T>::write_to_file(const std::string& filename,
                                    const ArrayCompressionInfo aci) const
 {
     mosaic_grid.write_to_fht(fht);
-    CCDImage<T>::write_to_file(filename, fht, aci);
+    CcdImage<T>::write_to_file(filename, fht, aci);
 }
 
 

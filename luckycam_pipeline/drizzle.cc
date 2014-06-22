@@ -44,7 +44,7 @@ using tbb::tick_count;
 
 ///This struct is used with the intention of eventually enabling reduction across multiple observations of the same target.
 struct ProcessedDatasetInfo {
-    CCD_DatasetInfo info;
+    CcdDatasetInfo info;
     string info_file_path;
     string frames_list_path;
     vector<FrameInfo> frames;
@@ -146,7 +146,7 @@ ProgramOptionSet get_options_from_command_line(int argc, char** argv)
         for (size_t i=0; i!=guide_star_dataset_info_paths.size(); i++) {
             ProcessedDatasetInfo pdi;
             pdi.info_file_path = guide_star_dataset_info_paths[i];
-            pdi.info = CCD_DatasetInfo(pdi.info_file_path);
+            pdi.info = CcdDatasetInfo(pdi.info_file_path);
             pdi.frames_list_path = pdi.info.most_recently_output_frame_list;
             cout<<"Attempting to load guide star frame list from \""<<pdi.frames_list_path<<"\""<<endl;
             pdi.frames = FrameInfo::load_frames_vec(pdi.frames_list_path);
@@ -160,7 +160,7 @@ ProgramOptionSet get_options_from_command_line(int argc, char** argv)
             pdi.info_file_path = gs_info_list_pairs[i];
             pdi.frames_list_path = gs_info_list_pairs[i+1];
 
-            pdi.info = CCD_DatasetInfo(pdi.info_file_path);
+            pdi.info = CcdDatasetInfo(pdi.info_file_path);
             pdi.frames = FrameInfo::load_frames_vec(pdi.frames_list_path);
             opts.guide_CCD_datasets.push_back(pdi);
         }
@@ -181,7 +181,7 @@ ProgramOptionSet get_options_from_command_line(int argc, char** argv)
             if (additional_dataset_info_paths[i]!= opts.guide_CCD_datasets.front().info_file_path) {
                 //Will need to make this more sophisticated to deal with multiple obs.
                 ProcessedDatasetInfo pdi;
-                pdi.info = CCD_DatasetInfo(additional_dataset_info_paths[i]);
+                pdi.info = CcdDatasetInfo(additional_dataset_info_paths[i]);
                 pdi.frames_list_path = pdi.info.most_recently_output_frame_list;
                 pdi.frames = FrameInfo::load_frames_vec(pdi.frames_list_path);
                 opts.additional_CCD_datasets.push_back(pdi);
@@ -325,15 +325,15 @@ int main(int argc, char** argv)
 
 
     MosaicImage<float>first_gs_frm(
-        CCDImage<float>(gs_CCD_frms.front().file_path,
+        CcdImage<float>(gs_CCD_frms.front().file_path,
                         gs_CCD_frms.front().header_byte_offset));
     first_gs_frm.initialize_CCD_grid_for_raw_data();
 
-    const CCD_calibration_info gs_ccd_properties
+    const CcdCalibrationInfo gs_ccd_properties
         =opts.camconf.get_calibration_info_for_CCD_id(gs_CCD_frms.front().ccd_id);
 
     if (!opts.camconf.simulated_data) {
-        first_gs_frm = CCDImage<float>::sub_image(first_gs_frm,
+        first_gs_frm = CcdImage<float>::sub_image(first_gs_frm,
                        gs_ccd_properties.cropped_PixelRange);
     }
 //    p.first_gs_frm.add_comment("Composed from run "+(string_utils::pull_filestem(p.first_gs_frm.associated_filename())));
@@ -341,7 +341,7 @@ int main(int argc, char** argv)
 
     //=================  Prep CCD specific drizzle info structs: =================================================================
 
-    vector<CCD_DatasetInfo> all_datasets_info;
+    vector<CcdDatasetInfo> all_datasets_info;
 
     for (size_t i=0; i!=opts.guide_CCD_datasets.size(); ++i) {
         all_datasets_info.push_back(opts.guide_CCD_datasets[i].info);
@@ -349,14 +349,14 @@ int main(int argc, char** argv)
     for (size_t i=0; i!=opts.additional_CCD_datasets.size(); ++i) {
         all_datasets_info.push_back(opts.additional_CCD_datasets[i].info);
     }
-    vector<CCD_specific_drizzle_inf> drizzle_inf_vec =
-        CCD_specific_drizzle_inf::prep_drizzle_data_vec(ds,
+    vector<CcdDrizzleData> drizzle_inf_vec =
+        CcdDrizzleData::prep_drizzle_data_vec(ds,
                 all_datasets_info,
                 opts.camconf, multi_frm_vec.front(), drizzle_output_dir);
 
     if (opts.pixel_average_mode) {
         assert(drizzle_inf_vec.size()==1);
-        CCD_specific_drizzle_inf& ccd_inf = drizzle_inf_vec.front();
+        CcdDrizzleData& ccd_inf = drizzle_inf_vec.front();
         ccd_inf.output_mosaic_region = ccd_inf.input_mosaic_region;
         ccd_inf.drizzled_output_PixelRange = first_gs_frm.pix.range();
         ccd_inf.output_CCD_low_corner = ccd_inf.input_CCD_region.low;
@@ -364,13 +364,13 @@ int main(int argc, char** argv)
     }
 
     //=================  Get target posn for guide star =============================
-    CCD_Position gs_target_CCD_posn =FrameInfo::mean_guide_star_estimate(
+    CcdPosition gs_target_CCD_posn =FrameInfo::mean_guide_star_estimate(
                                          gs_CCD_frms).Position;
     cout<<"GS target CCD posn: " <<gs_target_CCD_posn<<endl;
 
 //   ================== Figure out the output region mosaic coords ==================================
-    CCD_specific_drizzle_inf gs_drizzle_inf =
-        CCD_specific_drizzle_inf::find_drizzle_info_for_ccd_id(gs_CCD_frms.front().ccd_id,
+    CcdDrizzleData gs_drizzle_inf =
+        CcdDrizzleData::find_drizzle_info_for_ccd_id(gs_CCD_frms.front().ccd_id,
                 drizzle_inf_vec);
     first_gs_frm.initialize_mosaic_grid_to_specific_region(
         gs_drizzle_inf.input_mosaic_region);
@@ -387,18 +387,18 @@ int main(int argc, char** argv)
     tbb::pipeline pipeline;
 //
 //
-//    if (ds.guide_regions.empty()) ds.guide_regions.push_back(multi_ccd_region());
+//    if (ds.guide_regions.empty()) ds.guide_regions.push_back(MultiCcdRegion());
 //
-    Quality_Selected_Load_to_Buffer_Filter input_buffer(
+    SelectiveLoadToBufferFilter input_buffer(
         gs_CCD_frms,
         multi_frm_vec,
         drizzle_inf_vec,
         gs_target_CCD_posn
     );
 
-    single_CCD_filters::Decompress_Filter decompressor;
+    single_CCD_filters::DecompressFilter decompressor;
 
-    single_CCD_filters::Frame_Count_Display_Filter count_filter(true);
+    single_CCD_filters::FrameCountDisplayFilter count_filter(true);
 
     pipeline.add_filter(input_buffer);
     pipeline.add_filter(decompressor);
@@ -406,9 +406,9 @@ int main(int argc, char** argv)
 
 
 
-    Drizzle_Token_Crop_and_Debias_Filter db_filter;
+    MultiframeCropDebiasFilter db_filter;
 
-    Cosmic_Ray_Downweighting_Filter ray_weight_filter(20);
+    CosmicRayDownweightingFilter ray_weight_filter(20);
 
 //    single_CCD_filters::Float_To_Double_Filter sim_data_convert_filter;
 
@@ -419,23 +419,23 @@ int main(int argc, char** argv)
 //        pipeline.add_filter(sim_data_convert_filter);
     }
 
-    normalization_filter norm_filter;
+    NormalizationFilter norm_filter;
 
     const double threshold_in_photo_electrons=0.33;
-    Photon_Thresholding_Filter thresh_filter(threshold_in_photo_electrons);
+    PhotonThresholdingFilter thresh_filter(threshold_in_photo_electrons);
 //    //amplifier glow subtraction
-    Dark_Current_Subtraction_Filter DC_filter(ds.thresholding_on);
+    DarkCurrentSubtractionFilter DC_filter(ds.thresholding_on);
     if (ds.normalisation_on) { pipeline.add_filter(norm_filter); }
     if (ds.normalisation_on && ds.thresholding_on) { pipeline.add_filter(thresh_filter); }
     if (ds.normalisation_on) { pipeline.add_filter(DC_filter); }
 //
 //    //Parallel drizzle filters
-    drizzle_filter drizzler(ds.drizzle_scale_factor,
+    DrizzleFilter drizzler(ds.drizzle_scale_factor,
                             ds.drizzle_pixel_fraction,
                             ds.thresholding_on);
 
 
-//    raw_data_mosaic_filter raw_mosaic_output_filter(drizzle_inf_vec,
+//    RawDataMosaicFilter raw_mosaic_output_filter(drizzle_inf_vec,
 //            ds.output_base_folder+"raw_mosaics/",
 //             full_output_region);
 
@@ -443,10 +443,10 @@ int main(int argc, char** argv)
 //    else if (opts.output_frame_by_frame_mosaics) pipeline.add_filter(raw_mosaic_output_filter);
 
 //    //Rapid summation filter, creates all appropriate output frames and chooses the right one based on CCD_id
-    output_summation_filter sum_filter(drizzle_inf_vec, ds.thresholding_on);
+    OutputSummationFilter sum_filter(drizzle_inf_vec, ds.thresholding_on);
     if (!opts.output_frame_by_frame_mosaics) { pipeline.add_filter(sum_filter); }
 //
-    single_CCD_filters::Serial_Decommission_Filter end_filter;
+    single_CCD_filters::SerialDecommissionFilter end_filter;
     pipeline.add_filter(end_filter);
 //
 
@@ -535,7 +535,7 @@ int main(int argc, char** argv)
 
                 analog_CCD_image.pix *= CCD_drizzle_weights.back().pix;
                 CCD_drizzle_sums.back() =
-                    analog_CCD_image; //replace the weighted CCDImage with its column debiased counterpart
+                    analog_CCD_image; //replace the weighted CcdImage with its column debiased counterpart
             }
             CCD_drizzle_weights.back().write_to_file(drizzle_output_dir+"/CCD"+itoa(
                         current_CCD_id)+"/"+filename_percentile_text+"_weights.fits");
@@ -543,7 +543,7 @@ int main(int argc, char** argv)
             if (ds.thresholding_on) {
                 threshed_CCD_drizzle_sums.push_back(sum_filter.drizzled_threshed_vals_for_CCD(
                                                         current_CCD_id));
-                CCDImage<double>  threshed_CCD_image;
+                CcdImage<double>  threshed_CCD_image;
                 threshed_CCD_image.pix = drizzle::unweight_drizzle_results(
                                              threshed_CCD_drizzle_sums.back().pix, CCD_drizzle_weights.back().pix);
                 threshed_CCD_image.write_to_file(drizzle_output_dir+"/CCD"+itoa(
@@ -556,11 +556,11 @@ int main(int argc, char** argv)
                                                          current_CCD_id)+"/"+filename_percentile_text+"_PC_col-db.fits");
                     threshed_CCD_drizzle_sums.back() = threshed_CCD_image;
                     threshed_CCD_drizzle_sums.back().pix *=
-                        CCD_drizzle_weights.back().pix; //replace the weighted CCDImage with its column debiased counterpart
+                        CCD_drizzle_weights.back().pix; //replace the weighted CcdImage with its column debiased counterpart
                 }
 
                 //To do:
-                //                psf_models::reference_psf combined_image = combine_regular_and_threshed_bitmaps(
+                //                psf_models::ReferencePsf combined_image = combine_regular_and_threshed_bitmaps(
                 //                        analog_CCD_image, threshed_CCD_image,
                 //                        1.0/current_ccd_gain_inf.calculate_threshold_pass_fraction(),
                 //                        0.20,
@@ -575,10 +575,10 @@ int main(int argc, char** argv)
 
         if (ds.create_drizzle_mosaic && !opts.additional_CCD_datasets.empty()) {
             MosaicImage<double> mosaic_sum = init_blank_mosaic_frame(
-                                                 CCD_specific_drizzle_inf::get_mosaic_region(drizzle_inf_vec),
+                                                 CcdDrizzleData::get_mosaic_region(drizzle_inf_vec),
                                                  opts.drizzle_settings.drizzle_scale_factor);
             ImageGrid<coordinate_types::mosaic> mosaic_ref_frame(
-                CCD_specific_drizzle_inf::get_mosaic_region(drizzle_inf_vec),
+                CcdDrizzleData::get_mosaic_region(drizzle_inf_vec),
                 opts.drizzle_settings.drizzle_scale_factor);
             MosaicImage<double> mosaic_weights(mosaic_sum);
 
@@ -598,25 +598,25 @@ int main(int argc, char** argv)
             MosaicPosition gs_mos_posn = first_gs_frm.mosaic_grid.corresponding_grid_Position(
                                              first_gs_frm.CCD_grid.corresponding_pixel_Position(gs_target_CCD_posn));
 
-            vector<ds9::DS9Region> gs_target_file;
-            gs_target_file.push_back(ds9::DS9Region::point(gs_mos_posn));
-            ds9::DS9Region::save_regions_to_file(
+            vector<ds9::Ds9Region> gs_target_file;
+            gs_target_file.push_back(ds9::Ds9Region::point(gs_mos_posn));
+            ds9::Ds9Region::save_regions_to_file(
                 drizzle_output_dir+"drizzle_targets.reg", gs_target_file);
             //============================================================================
             //
             //
-            //            CCDImage<double>  unweighted_full_image(unweight_drizzle_results(full_output_sum, full_output_weights));
+            //            CcdImage<double>  unweighted_full_image(unweight_drizzle_results(full_output_sum, full_output_weights));
             ////            if (ds.normalisation_on) unweighted_full_image.add_normalisation_flag();
             //            unweighted_full_image.write_to_file(drizzle_output_dir+filename_percentile_text+"_AM.fits");
             //            full_output_weights.write_to_file(drizzle_output_dir+filename_percentile_text+"_weights.fits");
             //
             //            if (ds.thresholding_on){
             //                create_drizzle_mosaic(threshed_CCD_drizzle_sums, CCD_drizzle_weights, full_threshed_output, full_output_weights);
-            //                CCDImage<double>  threshed_unweighted_image(unweight_drizzle_results(full_threshed_output, full_output_weights));
+            //                CcdImage<double>  threshed_unweighted_image(unweight_drizzle_results(full_threshed_output, full_output_weights));
             //    //            if (ds.post_drizzle_col_debias_on) image_cleanup::col_10p_debias(threshed_unweighted_image);
             //                threshed_unweighted_image.write_to_file(drizzle_output_dir+filename_percentile_text+"_PC.fits");
             //
-            ////                reference_psf combined_image = combine_regular_and_threshed_bitmaps(
+            ////                ReferencePsf combined_image = combine_regular_and_threshed_bitmaps(
             ////                            unweighted_full_image, threshed_unweighted_image,
             ////                            1.0/
             ////                            0.2,

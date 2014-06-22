@@ -13,14 +13,14 @@ namespace Mn2_models {
 using std::vector;
 
 //==================================================================================
-model_params_wrapper::model_params_wrapper(
-    const minuit_model_interface& parameterised_model,
+ModelParamsWrapper::ModelParamsWrapper(
+    const MinuitModelInterface& parameterised_model,
     const vector<double>& params)
     : model_ref(parameterised_model),
       pars_copy(params)
 {}
 
-double model_params_wrapper::operator()(const CCD_PixelShift& offset) const
+double ModelParamsWrapper::operator()(const CcdPixelShift& offset) const
 {
     return model_ref(offset, pars_copy);
 }
@@ -53,11 +53,11 @@ PositionFit PositionFit::pull_from_MnPars(const ROOT::Minuit2::MnUserParameters&
 
 //==================================================================================
 
-const std::string gaussian_psf::model_name("Gauss"),
-      gaussian_psf::peak_suffix("_peak"),
-      gaussian_psf::sigma_suffix("_sigma");
+const std::string GaussianPsf::model_name("Gauss"),
+      GaussianPsf::peak_suffix("_peak"),
+      GaussianPsf::sigma_suffix("_sigma");
 //------------------------------------------------------------
-double gaussian_psf::operator()(const CCD_PixelShift& offset,
+double GaussianPsf::operator()(const CcdPixelShift& offset,
                                 const std::vector<double>& psf_params) const
 {
     assert(psf_params.size()==2);
@@ -65,8 +65,8 @@ double gaussian_psf::operator()(const CCD_PixelShift& offset,
     return misc_math::gaussian_1d_function(radius, psf_params[0], psf_params[1]);
 }
 //-------------------------------------------------------------------------------
-void gaussian_psf::set_MnPars_from_PSF_Fit(
-    const PSF_Fit<psf_models::gaussian_psf_model> initial_fit,
+void GaussianPsf::set_MnPars_from_PsfFit(
+    const PsfFit<psf_models::GaussianPsfModel> initial_fit,
     ROOT::Minuit2::MnUserParameters* pars_ptr,
     const std::string& prefix)
 {
@@ -85,11 +85,11 @@ void gaussian_psf::set_MnPars_from_PSF_Fit(
 
 }
 //-------------------------------------------------------------------------------
-PSF_Fit<psf_models::gaussian_psf_model> gaussian_psf::pull_PSF_Fit_from_MnPars(
+PsfFit<psf_models::GaussianPsfModel> GaussianPsf::pull_PsfFit_from_MnPars(
     const ROOT::Minuit2::MnUserParameters& pars,
     const std::string& prefix)
 {
-    PSF_Fit<psf_models::gaussian_psf_model> fit;
+    PsfFit<psf_models::GaussianPsfModel> fit;
 
     fit.Position = PositionFit::pull_from_MnPars(pars, prefix+model_name);
 
@@ -101,6 +101,6 @@ PSF_Fit<psf_models::gaussian_psf_model> gaussian_psf::pull_PSF_Fit_from_MnPars(
 //==================================================================================
 
 
-}//end namespace coela::psf_fitting::minuit_psf_models
-} //end namespace coela::psf_fitting
+}//end namespace coela::PsfFitting::minuit_psf_models
+} //end namespace coela::PsfFitting
 }//end namespace coela

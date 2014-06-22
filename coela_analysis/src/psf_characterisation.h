@@ -7,7 +7,7 @@
 
 namespace coela {
 namespace psf_characterisation {
-//double estimate_fwhm_in_image_pix(const PixelArray2d<double>& bg_subbed_bmp, const CCD_Position& origin, const double est_peak_value, const double max_radius); ///<uses linear interpolation to estimate FWHM, where 'maximum' is value of origin pixel.
+//double estimate_fwhm_in_image_pix(const PixelArray2d<double>& bg_subbed_bmp, const CcdPosition& origin, const double est_peak_value, const double max_radius); ///<uses linear interpolation to estimate FWHM, where 'maximum' is value of origin pixel.
 double estimate_fwhm_in_image_pix(const PixelArray2d<double>& bg_subbed_bmp,
                                   const PixelPosition& origin,
                                   const double est_peak_value,
@@ -45,7 +45,7 @@ struct psf_profile_point {
     double mean_value, median_value, std_dev, max_val, min_val;
     size_t n_samples;
 
-    static void save_profile_information_to_file(const std::string& filename,
+    static void save_proFileInformation_to_file(const std::string& filename,
             const std::vector<psf_profile_point>& pts,
 //            const double peak_val=1.0,
             const std::string output_prefix="");
@@ -55,7 +55,7 @@ bool compare_profile_point_radius(const psf_profile_point& first,
                                   const psf_profile_point& second);
 //---------------------------------------------------------------------------------------------------------------
 
-//std::vector<std::pair <double, double>  > get_radial_data(const PixelArray2d<double>& bmp, const CCD_Position& origin, double max_radius);
+//std::vector<std::pair <double, double>  > get_radial_data(const PixelArray2d<double>& bmp, const CcdPosition& origin, double max_radius);
 
 
 
@@ -63,7 +63,7 @@ bool compare_profile_point_radius(const psf_profile_point& first,
 
 //std::vector<std::pair <double, double>  >
 //get_radial_data(    const PixelArray2d<double>& bmp,
-//                    const CCD_Position& origin,
+//                    const CcdPosition& origin,
 //                    const double max_radius,
 //                    const PixelArray2d<double>& data_mask);
 //---------------------------------------------------------------------------------------------------------------

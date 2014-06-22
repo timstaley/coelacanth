@@ -20,22 +20,22 @@ namespace coela {
 
 //=====================================================================================
 //Simple struct to hang together a line containing key, value, and comment:
-struct key_value_comment {
+struct KeyValueComment {
 
     //Constructor for a key / value pair
-    key_value_comment(const string& input_key,
+    KeyValueComment(const string& input_key,
                       const string& input_value,
                       const string& input_comment=""):
         key(input_key), value(input_value), comment(input_comment) {}
 
     //Constructor for a comment line
-    key_value_comment(const string& input_comment):comment(input_comment) {}
+    KeyValueComment(const string& input_comment):comment(input_comment) {}
 
 
     //Data:
     string key, value, comment;
 
-    bool operator==(const key_value_comment& rhs) const {
+    bool operator==(const KeyValueComment& rhs) const {
         return (key==rhs.key && value==rhs.value && comment == rhs.comment);
     }
 };
@@ -68,7 +68,7 @@ public:
     void clear();
     size_t size() const {return table.size();}
 
-    void add_key(const key_value_comment&); ///<NB throws if the key already exists
+    void add_key(const KeyValueComment&); ///<NB throws if the key already exists
     void remove_key(const string& key); ///< If key does not exist, no side effects.
     bool key_exists(const string& key) const;
 
@@ -81,7 +81,7 @@ public:
     const; //Const version - if the key does not exist, throw an exception
 
     ///Accessor via ordering number:
-    const key_value_comment operator[](const size_t line_number) const {return table[line_number];}
+    const KeyValueComment operator[](const size_t line_number) const {return table[line_number];}
 
     bool operator==(const OrderedMap& rhs) const {
         return (table == rhs.table);
@@ -90,7 +90,7 @@ public:
 private:
 //----------------------------------------------------------------
     //Data:
-    vector<key_value_comment> table;
+    vector<KeyValueComment> table;
     std::map <string, size_t> index_map;
 //----------------------------------------------------------------
 

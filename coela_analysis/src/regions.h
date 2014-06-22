@@ -15,21 +15,21 @@ namespace regions {
 
 //============================================================================
 template<class coord_type>
-class region_interface {
+class RegionInterface {
 public:
-    virtual ~region_interface() {}
+    virtual ~RegionInterface() {}
     virtual bool contains_point(const Position<coord_type>& testpoint) const=0;
     virtual RectangularRegion<coord_type> get_covering_region() const=0;
     virtual double analytic_area() const=0; //NB in units of co-ordinate system!
-    virtual CCDImage<double> generate_mask_for_covered_portion_of_image(
-        const CCDImage<double>& image_to_mask) const=0;
+    virtual CcdImage<double> generate_mask_for_covered_portion_of_image(
+        const CcdImage<double>& image_to_mask) const=0;
 
-//        ds9::region DS9Region(); //implemented for some but not yet all
+//        ds9::region Ds9Region(); //implemented for some but not yet all
 };
 //============================================================================
 
 //Handy generic subroutines:
-//CCD_Position get_region_centroid(const image<double>& image, const region_base<CCD_Position>& rgn, const double threshold=0.0);
+//CcdPosition get_RegionCentroid(const image<double>& image, const region_base<CcdPosition>& rgn, const double threshold=0.0);
 //double get_region_weight(const float_bitmap& image, const region_base<frame_Position>& frm_rgn);
 
 //Internal generic subroutine:
@@ -37,13 +37,13 @@ public:
 //============================================================================
 
 template <class coord_type>
-class circular_aperture: public region_interface<coord_type> {
+class CircularAperture: public RegionInterface<coord_type> {
 public:
     //constructor
-    circular_aperture(const Position<coord_type>& centre_init,
+    CircularAperture(const Position<coord_type>& centre_init,
                       const double radius_in_these_coords);
 
-//    circular_aperture(const ds9::region& rgn):region_base<Coord_Type>(rgn.coord_type){
+//    CircularAperture(const ds9::region& rgn):region_base<Coord_Type>(rgn.coord_type){
 //        if (rgn.region_type!="circle") throw std::runtime_error("Cannot convert this region to a circular aperture");
 //        assert(rgn.parameters.size()==3);
 //        centre = Coord_Type(rgn.parameters[0], rgn.parameters[1]);
@@ -54,10 +54,10 @@ public:
     bool contains_point(const Position<coord_type>& testpoint) const;
     RectangularRegion<coord_type> get_covering_region() const;
     double analytic_area() const;
-    CCDImage<double> generate_mask_for_covered_portion_of_image(const CCDImage<double>&
+    CcdImage<double> generate_mask_for_covered_portion_of_image(const CcdImage<double>&
             image_to_mask) const;
 
-//    ds9::region DS9Region() const;
+//    ds9::region Ds9Region() const;
     Position<coord_type> centre;
     double radius;
 

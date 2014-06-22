@@ -20,9 +20,9 @@ SUITE(Ordered_Map)
 
     TEST(Basic_Functionality) {
         OrderedMap map1;
-        key_value_comment k0("somekey","someval");
-        key_value_comment k1("anotherkey","someval");
-        key_value_comment k2("key3","value3");
+        KeyValueComment k0("somekey","someval");
+        KeyValueComment k1("anotherkey","someval");
+        KeyValueComment k2("key3","value3");
 
         vector<string> value_strings;
 
@@ -55,15 +55,15 @@ SUITE(Ordered_Map)
 
     TEST(Merge_with_prefix_map) {
         OrderedMap map1;
-        key_value_comment k0("somekey","someval");
-        key_value_comment k1("anotherkey","someval");
-        key_value_comment k2("key3","value3");
+        KeyValueComment k0("somekey","someval");
+        KeyValueComment k1("anotherkey","someval");
+        KeyValueComment k2("key3","value3");
 
         map1.add_key(k0);
         map1.add_key(k1);
         map1.add_key(k2);
 
-        key_value_comment k3("key4","value4");
+        KeyValueComment k3("key4","value4");
 
         OrderedMap prefix_map;
         prefix_map.add_key(k1);

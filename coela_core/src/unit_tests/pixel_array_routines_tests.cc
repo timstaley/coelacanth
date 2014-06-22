@@ -17,7 +17,7 @@ SUITE(pixel_array_routines)
         boost::filesystem::create_directories(test_suite_output_dir);
     }
 
-    TEST(region_centroid) {
+    TEST(RegionCentroid) {
         PixelArray2d<double> img(20,20, 0.0);
 
         PixelIndex first_pixel(5,10);

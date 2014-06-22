@@ -25,7 +25,7 @@ int filter_debug=0;
 //=========================================================================================================
 
 
-void frame_cleanup_token::clear()
+void FrameCleanupToken::clear()
 {
     frame_inf = FrameInfo();
     //bmp = image<double>(); //Actually, don't blank the bmp. By re-assigning it we can avoid de-allocating and re-allocating memory chunks
@@ -46,7 +46,7 @@ void frame_cleanup_token::clear()
 //=========================================================================================================
 
 
-File_Timestamp_Imprinting_Filter::File_Timestamp_Imprinting_Filter(
+FileTimestampImprintingFilter::FileTimestampImprintingFilter(
     const FrameInfo& first_frame, const double milliseconds_per_frame_):
     filter(serial_in_order), //NB made serial so std::gmtime does not produce memory conflicts from separate threads (it assigns to a single static memory)
     milliseconds_per_frame(milliseconds_per_frame_)
@@ -55,9 +55,9 @@ File_Timestamp_Imprinting_Filter::File_Timestamp_Imprinting_Filter(
     init_frame_number = first_frame.corrected_frame_id;
 }
 
-void* File_Timestamp_Imprinting_Filter::operator()(void* item)
+void* FileTimestampImprintingFilter::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 
     double milliseconds_since_init = milliseconds_per_frame* (double)(
                                          b.frame_inf.corrected_frame_id - init_frame_number);
@@ -91,20 +91,20 @@ void* File_Timestamp_Imprinting_Filter::operator()(void* item)
 }
 
 
-void* Timestamp_Load_Filter::operator()(void* item)
+void* TimestampLoadFilter::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     b.frame_inf.header_timestamp=string_utils::atoi(b.fht.get_key_value("FRAMETIM"));
     return &b;
 }
 
 
-void* Frame_Count_Display_Filter::operator()(void* item)
+void* FrameCountDisplayFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Frame count filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 
-    if (frame_predicate_ref(b)) { counter++; }
+    if (FramePredicate_ref(b)) { counter++; }
     if (display_frame_count) {
         cout <<"\r"<<counter<<": Loaded frame named "<<b.frame_inf.derived_lcc_filename<<" from file "<<
              string_utils::pull_filename(b.frame_inf.file_path)<<"\t";
@@ -121,14 +121,14 @@ void* Frame_Count_Display_Filter::operator()(void* item)
 }
 
 template < class T>
-Sequential_File_Buffer_Filter<T>::Sequential_File_Buffer_Filter(
+SequentialFileBufferFilter<T>::SequentialFileBufferFilter(
     const vector<FrameInfo>& frame_info_vec, size_t n_frames_to_load):
     filter(serial_in_order),
     frm_inf_vec(frame_info_vec),
     next_buffer(0), bytes_off_disk(0), counter(0)
 {
-    token_buffers=frame_cleanup_token::initialize_token_vec<T>(lucky_n_tokens);
-    token_buffer_ptrs = vector<frame_cleanup_token*>(token_buffers.size());
+    token_buffers=FrameCleanupToken::initialize_token_vec<T>(lucky_n_tokens);
+    token_buffer_ptrs = vector<FrameCleanupToken*>(token_buffers.size());
     for (size_t i=0; i!= token_buffers.size(); i++) {
         token_buffer_ptrs[i]=&(token_buffers[i]);
     }
@@ -139,7 +139,7 @@ Sequential_File_Buffer_Filter<T>::Sequential_File_Buffer_Filter(
 }
 
 template < class T>
-void Sequential_File_Buffer_Filter<T>::reset()
+void SequentialFileBufferFilter<T>::reset()
 {
     current_posn_index=0;
     next_buffer=0;
@@ -148,10 +148,10 @@ void Sequential_File_Buffer_Filter<T>::reset()
 }
 
 template < class T>
-void* Sequential_File_Buffer_Filter<T>::operator()(void*)
+void* SequentialFileBufferFilter<T>::operator()(void*)
 {
 //            if (filter_debug) cerr<<"Buffer filter...\n";
-    frame_cleanup_token& b = *token_buffer_ptrs[next_buffer];
+    FrameCleanupToken& b = *token_buffer_ptrs[next_buffer];
     next_buffer = (next_buffer+1) % lucky_n_tokens;
 
     //b.clear();    //NB this gets called by the initialization and decommission filters, so is unnecessary (although harmless) here.
@@ -187,7 +187,7 @@ void* Sequential_File_Buffer_Filter<T>::operator()(void*)
                                                 || file_extension==".lcc")) {
 
             b.buffer.buffer_whole_file(b.frame_inf.file_path);
-        } else { throw runtime_error("Sequential_File_Buffer_Filter<T>::operator() - unrecognised data type"); }
+        } else { throw runtime_error("SequentialFileBufferFilter<T>::operator() - unrecognised data type"); }
 
 
         bytes_off_disk+=b.buffer.data_vec().size();
@@ -198,31 +198,31 @@ void* Sequential_File_Buffer_Filter<T>::operator()(void*)
 }
 
 //Declare templated types for compilation:
-template class Sequential_File_Buffer_Filter<frame_cleanup_token>;
+template class SequentialFileBufferFilter<FrameCleanupToken>;
 
 
-void* Decompress_Filter::operator()(void* item)
+void* DecompressFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Decompress filter..."; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 //     if (b.frame_inf.file_is_cube_FITS) {
 //         b.raw_image=image<int>::load_image_from_buffered_cube_slice(b.buffer, b.fht, b.array_hdr, 0);
 //     }
 //     else {
 
     b.fht = FitsHeader(b.frame_inf.file_path, b.frame_inf.header_byte_offset);
-    b.img=CCDImage<float>::load_image_from_buffered_data(b.buffer, b.fht,
+    b.img=CcdImage<float>::load_image_from_buffered_data(b.buffer, b.fht,
             b.fht.header_file_length_in_bytes());
     b.img.initialize_CCD_grid_for_raw_data();
     if (filter_debug) { cerr<<"Done\n"; }
     return &b;
 }
 
-void* Frame_Output_Filter::operator()(void* item)
+void* FrameOutputFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Frame output filter..."; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
-    if (frame_predicate_ref(b)) {
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
+    if (FramePredicate_ref(b)) {
         try {
             b.img.write_to_file(output_folder+"/"+b.frame_inf.derived_lcc_filename);
             n_frames_output++;
@@ -236,25 +236,25 @@ void* Frame_Output_Filter::operator()(void* item)
     return &b;
 }
 
-void* Frame_Sequential_Write_Filter::operator()(void* item)
+void* FrameSequentialWriteFilter::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     b.img.write_to_file(output_dir+"/"+b.frame_inf.derived_lcc_filename);
     return &b;
 }
 
-void* Frame_Info_Collection_Filter::operator()(void* item)
+void* FrameInfoCollectionFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"List collation filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     if (b.frame_is_good) { frames.push_back(b.frame_inf); }
     return &b;
 }
 
-void* Serial_Decommission_Filter::operator()(void* item)
+void* SerialDecommissionFilter::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
-    b.clear(); //Set the token blank so it cannot be accidentally used until properly re-initialised (NB virtual func, works for derived class "drizzle_token" also)
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
+    b.clear(); //Set the token blank so it cannot be accidentally used until properly re-initialised (NB virtual func, works for derived class "DrizzleToken" also)
     return NULL;
 }
 
@@ -265,15 +265,15 @@ void* Serial_Decommission_Filter::operator()(void* item)
 void* FrameCropFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"FrameCropFilter filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
-    b.img=CCDImage<float>::sub_image(b.img, crop_rgn);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
+    b.img=CcdImage<float>::sub_image(b.img, crop_rgn);
     return &b;
 }
 
 void* BiasDriftTracker::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Temporal debias filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     if (b.raw_data_zeroing_histogram_space.pixel_count()) {
         b.raw_data_zeroing_histogram_space.clear();
     }
@@ -299,7 +299,7 @@ void* BiasDriftTracker::operator()(void* item)
 
 //void* Float_To_Double_Filter::operator()( void* item ){
 //    if (filter_debug) cerr<<"Float to Double filter...\n";
-//    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+//    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 //    b.debiased_input= image<double>(b.raw_input);
 //    return &b;
 //}
@@ -311,7 +311,7 @@ void* BiasDriftTracker::operator()(void* item)
 //=========================================================================================================
 //---------------------------------------------------------------------------------------------------------------
 
-Pixel_Time_Series_Record::Pixel_Time_Series_Record(
+PixelTimeSeriesRecord::PixelTimeSeriesRecord(
     const vector<PixelIndex>& pixels_to_watch,
     const size_t n_frames_estimate): tbb::filter(serial_in_order)
 {
@@ -322,9 +322,9 @@ Pixel_Time_Series_Record::Pixel_Time_Series_Record(
     }
 }
 
-void* Pixel_Time_Series_Record::operator()(void* item)
+void* PixelTimeSeriesRecord::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 
     for (size_t i=0; i!=pixel_indices.size(); ++i) {
         pixval_series[i].push_back(
@@ -337,8 +337,8 @@ void* Pixel_Time_Series_Record::operator()(void* item)
 }
 
 using std::pair;
-vector< std::pair< PixelIndex, vector<Pixel_Time_Series_Record::pixel_event> > >
-Pixel_Time_Series_Record::get_time_series() const
+vector< std::pair< PixelIndex, vector<PixelTimeSeriesRecord::pixel_event> > >
+PixelTimeSeriesRecord::get_time_series() const
 {
     vector< pair< PixelIndex, vector<pixel_event> > > v;
     for (size_t i=0; i!=pixel_indices.size(); ++i) {
@@ -350,24 +350,24 @@ Pixel_Time_Series_Record::get_time_series() const
 }
 
 //==================================================================================================
-Col_Histogram_Gather::Col_Histogram_Gather(const PixelRange& image_layout,
+ColHistogramGather::ColHistogramGather(const PixelRange& image_layout,
         int y_range_low, int y_range_high):
     filter(serial_in_order), y_lo(y_range_low), y_hi(y_range_high)
 {
     col_histograms =  vector<HistogramContainer14bit>(image_layout.x_dim());
 }
 
-void Col_Histogram_Gather::set_hist_min_value(const int minval)
+void ColHistogramGather::set_hist_min_value(const int minval)
 {
     for (size_t i=0; i!= col_histograms.size(); ++i) {
         col_histograms[i].set_min_value(minval);
     }
 }
 
-void* Col_Histogram_Gather::operator()(void* item)
+void* ColHistogramGather::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
-    CCDImage<float>& img=b.img;
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
+    CcdImage<float>& img=b.img;
 
 
     PixelRange img_col_hist_rgn(1,y_lo, img.pix.range().x_dim(), y_hi);
@@ -388,24 +388,24 @@ void* Col_Histogram_Gather::operator()(void* item)
 }
 
 //==================================================================================================
-RowHistogram_Gather::RowHistogram_Gather(const PixelRange& image_layout,
+RowHistogramGather::RowHistogramGather(const PixelRange& image_layout,
         int x_range_low):
     filter(serial_in_order), x_lo_(x_range_low)
 {
     row_histograms =  vector<HistogramContainer14bit>(image_layout.y_dim());
 }
 
-void RowHistogram_Gather::set_hist_min_value(const int minval)
+void RowHistogramGather::set_hist_min_value(const int minval)
 {
     for (size_t i=0; i!= row_histograms.size(); ++i) {
         row_histograms[i].set_min_value(minval);
     }
 }
 
-void* RowHistogram_Gather::operator()(void* item)
+void* RowHistogramGather::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
-    CCDImage<float>& img=b.img;
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
+    CcdImage<float>& img=b.img;
 
 
     PixelRange img_row_hist_rgn(img.pix.range());
@@ -421,7 +421,7 @@ void* RowHistogram_Gather::operator()(void* item)
 void* UniformDebias::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Uniform DB filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     b.img.pix-=b.frame_inf.bias_pedestal;
 //    b.fht.add_comment("Uniform bias pedestal removed. ");
     return &b;
@@ -431,7 +431,7 @@ void* UniformDebias::operator()(void* item)
 void* BiasFrameSubtractor::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Static DB filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     b.img.pix-=bias_frame.pix;
     b.fht.add_comment("Col debiased using bias frame ");
     return &b;
@@ -441,23 +441,23 @@ void* BiasFrameSubtractor::operator()(void* item)
 void* Histogram14BitBuildFilter::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Hist record filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     if (b.frame_is_good) { gain_utils::append_histogram_data_from_float_bitmap_region(b.img, hist_box_, histogram_); }
     return &b;
 }
 
 //void* Histogram10BitBuildFilter::operator()( void* item ){
 //    if (filter_debug) cerr<<"Hist record filter...\n";
-//    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+//    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 //    if (b.frame_is_good)    gain_utils::append_histogram_data_from_float_bitmap_region(b.img, hist_box_, histogram_);
 //    return &b;
 //}
 
-using psf_models::reference_psf;
+using psf_models::ReferencePsf;
 CrossCorrelator::
 CrossCorrelator(
-    const vector<CCD_BoxRegion>& gs_regions_,
-    const reference_psf& kernel,
+    const vector<CcdBoxRegion>& gs_regions_,
+    const ReferencePsf& kernel,
     const double input_resample_factor,
     const double convolution_threshold_factor,
     const double ray_proximity_limit_in_pixels,
@@ -477,7 +477,7 @@ CrossCorrelator(
 void* CrossCorrelator::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Gs reg filter...\n"; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
 
 
     if (!b.frame_inf.guide_star_estimates.empty()) {
@@ -486,14 +486,14 @@ void* CrossCorrelator::operator()(void* item)
                                 b.token_buffer_id));
     }
 //            assert(b.frame_inf.guide_star_estimates.empty());
-    registration_data_struct& rd=reg_data_copies_[b.token_buffer_id];
+    RegistrationData& rd=reg_data_copies_[b.token_buffer_id];
 
     assert(!rd.gs_regions.empty());
 
 
     for (size_t star_num=0; star_num!=rd.gs_regions.size(); star_num++) {
 //        cerr<<"Guiding on star "<<star_num<<endl;
-        frame_registration::gs_lock<CCD_Position> star_posn_est =
+        frame_registration::GuideStarLock<CcdPosition> star_posn_est =
             frame_registration::find_best_psf_match(
                 b.img,
                 rd.gs_regions[star_num],
@@ -506,7 +506,7 @@ void* CrossCorrelator::operator()(void* item)
         b.frame_inf.guide_star_estimates.push_back(star_posn_est);
 
         for (size_t i=0; i!=b.frame_inf.confirmed_cosmic_rays.size(); ++i) {
-            const CCD_Position& ray = b.frame_inf.confirmed_cosmic_rays[i];
+            const CcdPosition& ray = b.frame_inf.confirmed_cosmic_rays[i];
             double ray_to_star_lock_dist = coord_distance(ray,
                                            b.frame_inf.guide_star_estimates.back().Position);
             if (ray_to_star_lock_dist < ray_proximity_limit_) {
@@ -521,10 +521,10 @@ void* CrossCorrelator::operator()(void* item)
 }
 
 
-void* Frame_Summation::operator()(void* item)
+void* FrameSummation::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Sum filter..."; }
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     if (b.frame_is_good) {
         sum.pix+=b.img.pix;
         n_frames_summed++;
@@ -533,29 +533,29 @@ void* Frame_Summation::operator()(void* item)
     return &b;
 }
 
-CCDImage<double> Frame_Summation::Avg()
+CcdImage<double> FrameSummation::Avg()
 {
-    CCDImage<double> avg(sum);
+    CcdImage<double> avg(sum);
     avg.pix/=(double)n_frames_summed;
     return avg;
 }
 
-void* Dynamic_Row_Debias::operator()(void* item)
+void* DynamicRowDebias::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     image_cleanup::row_10p_debias_preserving_bg_level(&(b.img.pix)) ;
     return &b;
 }
 
-void* Region_Centroid::operator()(void* item)
+void* RegionCentroid::operator()(void* item)
 {
-    frame_cleanup_token& b = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& b = *static_cast<FrameCleanupToken*>(item);
     frames.push_back(b.frame_inf);
     PixelPosition frm_centroid = pixel_array_routines::centroid(b.img.pix , GS_box);
-    CCD_Position ccd_centroid = b.img.CCD_grid.corresponding_grid_Position(frm_centroid);
+    CcdPosition ccd_centroid = b.img.CCD_grid.corresponding_grid_Position(frm_centroid);
     frames.back().guide_star_estimates.clear();
     frames.back().guide_star_estimates.push_back(
-        frame_registration::gs_lock<CCD_Position>(ccd_centroid, 1.0)
+        frame_registration::GuideStarLock<CcdPosition>(ccd_centroid, 1.0)
     );
     return &b;
 }
@@ -563,10 +563,10 @@ void* Region_Centroid::operator()(void* item)
 
 
 
-void* Cosmic_Ray_Candidate_Detection::operator()(void* item)
+void* CosmicRayCandidateDetection::operator()(void* item)
 {
     if (filter_debug) { cerr<<"Cosmic ray candidate detection filter...\n"; }
-    frame_cleanup_token& ft = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& ft = *static_cast<FrameCleanupToken*>(item);
     for (PixelIterator i(ft.img.pix.range()); i!=i.end; ++i) {
         if (ft.img.pix(i) > threshold) {
             ft.cosmic_ray_candidates.push_back(i);
@@ -577,9 +577,9 @@ void* Cosmic_Ray_Candidate_Detection::operator()(void* item)
 }
 
 
-void* Cosmic_Ray_Confirmation::operator()(void* item)
+void* CosmicRayConfirmation::operator()(void* item)
 {
-    frame_cleanup_token& ft = *static_cast<frame_cleanup_token*>(item);
+    FrameCleanupToken& ft = *static_cast<FrameCleanupToken*>(item);
 
     vector<PixelIndex> rays_to_check = ft.cosmic_ray_candidates;
     while (!rays_to_check.empty()) {
@@ -644,10 +644,10 @@ void* Cosmic_Ray_Confirmation::operator()(void* item)
 
 
 
-void* Cosmic_Ray_Diagnosis_Output::operator()(void* item)
+void* CosmicRayDiagnosisOutput::operator()(void* item)
 {
-    if (filter_debug) { cerr<<"Cosmic_Ray_Diagnosis_Output filter...\n"; }
-    frame_cleanup_token& ft = *static_cast<frame_cleanup_token*>(item);
+    if (filter_debug) { cerr<<"CosmicRayDiagnosisOutput filter...\n"; }
+    FrameCleanupToken& ft = *static_cast<FrameCleanupToken*>(item);
     if (!ft.cosmic_ray_candidates.empty()) {
 
         try {
@@ -679,8 +679,8 @@ void* Cosmic_Ray_Diagnosis_Output::operator()(void* item)
 
             if (!ft.frame_inf.confirmed_cosmic_rays.empty()
                     && !ft.cosmic_rays_confirmed_due_to_edge_case) {
-                CCDImage<float> window_bmp=
-                    CCDImage<float>::sub_image(
+                CcdImage<float> window_bmp=
+                    CcdImage<float>::sub_image(
                         ft.img,
                         PixelRange::overlap(confirmed_rays_window, ft.img.pix.range())
                     );
@@ -690,30 +690,30 @@ void* Cosmic_Ray_Diagnosis_Output::operator()(void* item)
                 confirmed_peak_vals.push_back(window_bmp.pix(window_bmp.pix.max_PixelIndex()));
             } else if (!ft.frame_inf.confirmed_cosmic_rays.empty()
                        && ft.cosmic_rays_confirmed_due_to_edge_case) {
-                CCDImage<float> window_bmp=
-                    CCDImage<float>::sub_image(ft.img, PixelRange::overlap(confirmed_rays_window,
+                CcdImage<float> window_bmp=
+                    CcdImage<float>::sub_image(ft.img, PixelRange::overlap(confirmed_rays_window,
                                                ft.img.pix.range()));
 
                 window_bmp.write_to_file(output_folder+"/confirmed_due_to_edge_case/"
                                          +ft.frame_inf.derived_lcc_filename);
                 confirmed_peak_vals.push_back(window_bmp.pix(window_bmp.pix.max_PixelIndex()));
             } else if (ft.cosmic_rays_rejected_spatially && !ft.cosmic_rays_rejected_temporally) {
-                CCDImage<float> window_bmp=
-                    CCDImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
+                CcdImage<float> window_bmp=
+                    CcdImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
                                                ft.img.pix.range()));
 
                 window_bmp.write_to_file(output_folder+"/rejected_spatially/"
                                          +ft.frame_inf.derived_lcc_filename);
             } else if (!ft.cosmic_rays_rejected_spatially && ft.cosmic_rays_rejected_temporally) {
-                CCDImage<float> window_bmp=
-                    CCDImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
+                CcdImage<float> window_bmp=
+                    CcdImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
                                                ft.img.pix.range()));
 
                 window_bmp.write_to_file(output_folder+"/rejected_temporally/"
                                          +ft.frame_inf.derived_lcc_filename);
             } else if (ft.cosmic_rays_rejected_spatially && ft.cosmic_rays_rejected_temporally) {
-                CCDImage<float> window_bmp=
-                    CCDImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
+                CcdImage<float> window_bmp=
+                    CcdImage<float>::sub_image(ft.img, PixelRange::overlap(candidates_window,
                                                ft.img.pix.range()));
 
                 window_bmp.write_to_file(output_folder+"/rejected_both/"
@@ -722,7 +722,7 @@ void* Cosmic_Ray_Diagnosis_Output::operator()(void* item)
 
             n_frames_output++;
         } catch (runtime_error& e) {
-            cerr<<"Cosmic_Ray_Diagnosis_Output_Filter caught runtime error:\n"<<e.what()
+            cerr<<"CosmicRayDiagnosisOutput_Filter caught runtime error:\n"<<e.what()
                 <<"\nOutput folder was set to: "<<output_folder
                 <<"\nexiting..."<<endl;
             exit(0);

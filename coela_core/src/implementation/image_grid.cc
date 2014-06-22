@@ -65,7 +65,7 @@ void ImageGrid<coordinate_types::pixels>::load_from_fht(const FitsHeader&)
 
 
 template<>
-void ImageGrid<coordinate_types::CCD>::write_to_fht(FitsHeader& fht) const
+void ImageGrid<coordinate_types::ccd>::write_to_fht(FitsHeader& fht) const
 {
     if (!is_initialized()) {
         return;
@@ -85,7 +85,7 @@ void ImageGrid<coordinate_types::CCD>::write_to_fht(FitsHeader& fht) const
 }
 
 template<>
-void ImageGrid<coordinate_types::CCD>::load_from_fht(const FitsHeader& fht)
+void ImageGrid<coordinate_types::ccd>::load_from_fht(const FitsHeader& fht)
 {
     if (fht.key_exists("CCD_RGN")) {
         assert(fht.get_key_value("ATM1_1")==fht.get_key_value("ATM2_2"));
@@ -173,7 +173,7 @@ RectangularRegion<coord_type> ImageGrid<coord_type>::corresponding_grid_region(
 
 
 template class ImageGrid<coordinate_types::pixels>;
-template class ImageGrid<coordinate_types::CCD>;
+template class ImageGrid<coordinate_types::ccd>;
 template class ImageGrid<coordinate_types::mosaic>;
 
 

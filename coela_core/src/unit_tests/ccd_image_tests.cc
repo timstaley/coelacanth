@@ -15,7 +15,7 @@ using namespace std;
 
 extern string lucky_lib_test_resources_dir;
 
-SUITE(CCDImage)
+SUITE(CcdImage)
 {
     string test_suite_output_dir = "image_class_tests/";
 
@@ -26,7 +26,7 @@ SUITE(CCDImage)
     }
 
     TEST(sub_image_ds9_coord_display) {
-        CCDImage<double> img1;
+        CcdImage<double> img1;
         img1.pix = PixelArray2d<double> (100,100,55.5);
         img1.initialize_CCD_grid_for_raw_data();
 
@@ -37,7 +37,7 @@ SUITE(CCDImage)
 
         PixelRange box1(20,20,50,50);
 
-        CCDImage<double> img2 = CCDImage<double>::sub_image(img1,box1);
+        CcdImage<double> img2 = CcdImage<double>::sub_image(img1,box1);
         CHECK_EQUAL(box1.x_dim(), img2.pix.range().x_dim());
         CHECK_EQUAL(box1.y_dim(), img2.pix.range().y_dim());
 //        cerr<<"image 2 outline: " <<img2.array.outline()<<endl;
@@ -45,13 +45,13 @@ SUITE(CCDImage)
     }
 
     TEST(load_from_generic_file_type) {
-        CCDImage<float> flt_img;
+        CcdImage<float> flt_img;
         flt_img.pix = PixelArray2d<float>(10,10,3.14);
         string filename = test_suite_output_dir+"float_img.fits";
         flt_img.write_to_file(filename);
 
-        CCDImage<double> dbl_img =
-            CCDImage<double>::load_from_unknown_filetype(filename);
+        CcdImage<double> dbl_img =
+            CcdImage<double>::load_from_unknown_filetype(filename);
 
         for (PixelIterator i(dbl_img.pix.range()); i!=i.end; ++i) {
             CHECK_CLOSE(flt_img.pix(i), dbl_img.pix(i), 1e-7);
@@ -66,21 +66,21 @@ SUITE(CCDImage)
 
         CHECK_EQUAL(size_t(99), cube_hdr.z_dim());
 
-        CCDImage<float> plane1_from_cube =
-            CCDImage<float>::load_from_cube_FITS_file(fits_cube_filename,    1);
+        CcdImage<float> plane1_from_cube =
+            CcdImage<float>::load_from_cube_FITS_file(fits_cube_filename,    1);
 
-        CCDImage<float> plane45 =
-            CCDImage<float>::load_from_cube_FITS_file(fits_cube_filename,   45);
+        CcdImage<float> plane45 =
+            CcdImage<float>::load_from_cube_FITS_file(fits_cube_filename,   45);
 
-        CCDImage<float> plane99_from_cube =
-            CCDImage<float>::load_from_cube_FITS_file(fits_cube_filename,   99);
+        CcdImage<float> plane99_from_cube =
+            CcdImage<float>::load_from_cube_FITS_file(fits_cube_filename,   99);
 
         plane1_from_cube.write_to_file(test_suite_output_dir+"cube_plane1.fits", fht);
         plane45.write_to_file(test_suite_output_dir+"cube_plane45.fits", fht);
         plane99_from_cube.write_to_file(test_suite_output_dir+"cube_plane99.fits", fht);
 
 
-        CCDImage<float> plane1_via_ds9_extraction(lucky_lib_test_resources_dir
+        CcdImage<float> plane1_via_ds9_extraction(lucky_lib_test_resources_dir
                 +"cube_float_file_frame1.fits");
 
         for (PixelIterator i(plane1_from_cube.pix.range()); i!=i.end; ++i) {
@@ -90,10 +90,10 @@ SUITE(CCDImage)
     }
 
     TEST(init_CCD_grid_for_raw_data) {
-        CCDImage<float> test_image;
+        CcdImage<float> test_image;
         test_image.pix = PixelArray2d<float>(5,5,0);
         test_image.initialize_CCD_grid_for_raw_data();
-        CCD_BoxRegion expected_rgn(0,0,5,5);
+        CcdBoxRegion expected_rgn(0,0,5,5);
         CHECK_EQUAL(test_image.CCD_grid.image_outline_, expected_rgn);
     }
 

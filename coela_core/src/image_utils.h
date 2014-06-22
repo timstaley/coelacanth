@@ -21,24 +21,24 @@ namespace image_utils {
 
 //All Flux preserving:
 template<typename input_datatype>
-CCDImage<double> bicubic_resample_non_edge_region(
-    const CCDImage<input_datatype>& input_bmp,
-    const CCD_BoxRegion,
+CcdImage<double> bicubic_resample_non_edge_region(
+    const CcdImage<input_datatype>& input_bmp,
+    const CcdBoxRegion,
     const double resample_factor);
 
 ///Nb for coord x1 in orig--> x2 in resampled;      x2 = 2*(x1) - 1
-CCDImage<double> bicubic_resample_2x(const CCDImage<double>& input_bmp);
+CcdImage<double> bicubic_resample_2x(const CcdImage<double>& input_bmp);
 /// Similarly x3 = 4*(x1) - 3
-CCDImage<double> bicubic_resample_4x(const CCDImage<double>& input_bmp);
+CcdImage<double> bicubic_resample_4x(const CcdImage<double>& input_bmp);
 
-CCDImage<double> bin_image(const CCDImage<double>& input_image,
+CcdImage<double> bin_image(const CcdImage<double>& input_image,
                            const int bin_pixel_width);
 
 
 //
 //        float_bitmap interpolate_non_uniform_sampling_points(
 //                const pixel_box& image_shape,                 const ImageGrid<coordinate_type::CCD>& ref_grid,
-//                const vector<CCD_Position>& sample_Positions, const vector<double>& sample_values);
+//                const vector<CcdPosition>& sample_Positions, const vector<double>& sample_values);
 //
 //        float_bitmap interpolate_non_uniform_sampling_points(
 //                const pixel_box& image_shape,

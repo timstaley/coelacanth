@@ -31,7 +31,7 @@ using tbb::tick_count;
 
 struct ProgramOptionSet {
     string dataset_info_filename;
-    CCD_DatasetInfo dataset;
+    CcdDatasetInfo dataset;
 };
 
 void print_usage_and_exit()
@@ -44,7 +44,7 @@ ProgramOptionSet load_options_from_command_line(int argc, char** argv)
     if (argc != 2) { print_usage_and_exit(); }
     ProgramOptionSet opts;
     opts.dataset_info_filename=argv[1];
-    opts.dataset = CCD_DatasetInfo(opts.dataset_info_filename);
+    opts.dataset = CcdDatasetInfo(opts.dataset_info_filename);
     return opts;
 }
 
@@ -88,11 +88,11 @@ void process_n_rows(vector<FrameInfo>& frame_vec,
     for (size_t i=0; i!=n_frames_to_process; ++i) {
         cout<<"\rFrame "<<i<<" of "<< n_frames_to_process<<flush;
         FrameInfo& frm= frame_vec[i];
-        CCDImage<float> img;
+        CcdImage<float> img;
 
         img.pix = PixelArray2d<float>::load_from_file(frm.file_path,
                    frm.header_byte_offset);
-        img = CCDImage<float>::sub_image(img, crop_box);
+        img = CcdImage<float>::sub_image(img, crop_box);
 
         single_frame_hist.clear();
         if (frm.bias_pedestal== 0.0) {
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 {
 
     ProgramOptionSet opts = load_options_from_command_line(argc, argv) ;
-    const CCD_DatasetInfo& cdi(opts.dataset);
+    const CcdDatasetInfo& cdi(opts.dataset);
     cout<<"CCD output dir: "<<cdi.CCD_outputdir<<endl;
 
     CameraConfigInfo camconf(cdi.default_camera_config_file);
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
 
     size_t n_rows_to_process_at_once = 500;
 
-    CCDImage<float> first;
+    CcdImage<float> first;
     FrameInfo& frm= frame_vec.front();
 
 
@@ -164,9 +164,9 @@ int main(int argc, char** argv)
     first.initialize_CCD_grid_for_raw_data();
     PixelRange crop_box = camconf.get_calibration_info_for_CCD_id(
                               frm.ccd_id).cropped_PixelRange;
-    first = CCDImage<float>::sub_image(first, crop_box);
+    first = CcdImage<float>::sub_image(first, crop_box);
 
-    CCD_BoxRegion temporal_debias_rgn =
+    CcdBoxRegion temporal_debias_rgn =
         camconf.get_calibration_info_for_CCD_id(
             frm.ccd_id).default_temporal_debiasing_histogram_region;
 
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     cerr<<"Done"<<endl;
     cout<<endl;
 
-    CCDImage<float> per_pixel_bias_estimates(first);
+    CcdImage<float> per_pixel_bias_estimates(first);
     per_pixel_bias_estimates.pix.assign(0);
     //----------------------------------------------------------------------------------
     size_t first_row=1;
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     cout<<"Uniform bias est: "<< uniform_bias_est<<endl;
 
 //
-    CCDImage<float> standard_col_bias_frm =
+    CcdImage<float> standard_col_bias_frm =
         clean_and_register_subroutines::
         estimate_column_bias_pattern(
             frame_vec, output_folder,
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
 //
     standard_col_bias_frm.write_to_file(output_folder +"std_col_bias_frame.fits");
 
-    CCDImage<float> row_bias_frm =
+    CcdImage<float> row_bias_frm =
         clean_and_register_subroutines::
         estimate_row_bias_pattern(
             frame_vec, output_folder,
@@ -246,10 +246,10 @@ int main(int argc, char** argv)
     row_bias_frm.write_to_file(output_folder +"row_bias_frame.fits");
 
 //----------------------------------------------------------------------------------
-    CCDImage<float> blank_frame(per_pixel_bias_estimates);
+    CcdImage<float> blank_frame(per_pixel_bias_estimates);
     blank_frame.pix.assign(0.0);
 
-    CCDImage<double> raw_avg =
+    CcdImage<double> raw_avg =
         clean_and_register_subroutines::create_debiased_average(
             frame_vec,
             crop_box,
@@ -258,14 +258,14 @@ int main(int argc, char** argv)
             n_frames_to_process,
             7);
 
-    CCDImage<double>pixel_debiased_avg(raw_avg);
+    CcdImage<double>pixel_debiased_avg(raw_avg);
     pixel_debiased_avg.pix -= PixelArray2d<double>(per_pixel_bias_estimates.pix);
     pixel_debiased_avg.write_to_file(output_folder+"pixel_debiased_avg.fits");
 
-    CCDImage<float> combined_bias_frame(standard_col_bias_frm);
+    CcdImage<float> combined_bias_frame(standard_col_bias_frm);
     combined_bias_frame.pix += row_bias_frm.pix;
 
-    CCDImage<double> algorithm_debiased_avg(raw_avg);
+    CcdImage<double> algorithm_debiased_avg(raw_avg);
 //        clean_and_register_subroutines::create_debiased_average(
 //            frame_vec,
 //            crop_box,
@@ -278,11 +278,11 @@ int main(int argc, char** argv)
     algorithm_debiased_avg.write_to_file(output_folder+"algorithm_debiased_avg.fits");
 
 //----------------------------------------------------------------------------------
-    CCDImage<float> diff_after_col_debias(per_pixel_bias_estimates);
+    CcdImage<float> diff_after_col_debias(per_pixel_bias_estimates);
     diff_after_col_debias.pix -= standard_col_bias_frm.pix;
     diff_after_col_debias.write_to_file(output_folder+"col_db_bias_diff.fits");
 
-    CCDImage<float> diff_after_col_row_db(diff_after_col_debias);
+    CcdImage<float> diff_after_col_row_db(diff_after_col_debias);
     diff_after_col_row_db.pix -= row_bias_frm.pix;
     diff_after_col_row_db.write_to_file(output_folder + "col_and_row_db_bias_diff.fits");
 

@@ -19,7 +19,7 @@ void OrderedMap::clear()
     index_map.clear();
 }
 
-void OrderedMap::add_key(const key_value_comment& input)
+void OrderedMap::add_key(const KeyValueComment& input)
 {
     if (key_exists(input.key) && !input.key.empty()) {
       throw runtime_error(
@@ -51,7 +51,7 @@ bool OrderedMap::key_exists(const string& key) const
 void OrderedMap::merge_with_prefix_map(const OrderedMap& prefix_map)
 {
     OrderedMap m(prefix_map);
-    for (vector<key_value_comment>::const_iterator i=table.begin();
+    for (vector<KeyValueComment>::const_iterator i=table.begin();
             i!=table.end(); ++i) {
         if (!m.key_exists(i->key)) {
             m.add_key(*i);
@@ -68,7 +68,7 @@ const string& OrderedMap::operator[](const string& key) const
 }
 string & OrderedMap::operator[](const string& key)
 {
-    if (key_exists(key) ==false) { add_key(key_value_comment(key,"")); }
+    if (key_exists(key) ==false) { add_key(KeyValueComment(key,"")); }
     return table[index_map[key]].value;
 }
 

@@ -23,8 +23,8 @@ namespace single_CCD_filters {
 //=========================================================================================================
 const size_t lucky_n_tokens = 8;
 
-struct frame_cleanup_token {
-    frame_cleanup_token() {  clear(); }
+struct FrameCleanupToken {
+    FrameCleanupToken() {  clear(); }
 
     //These get reset by "clear"
     FrameInfo frame_inf;
@@ -56,7 +56,7 @@ struct frame_cleanup_token {
 //----------------------------------------------------------------
 //Template definition needs including with header....
 template <class T>
-vector<T> frame_cleanup_token::initialize_token_vec(const size_t n_tokens)
+vector<T> FrameCleanupToken::initialize_token_vec(const size_t n_tokens)
 {
     vector< T > v(n_tokens);
     for (size_t i=0; i!=v.size(); ++i) {
@@ -66,16 +66,16 @@ vector<T> frame_cleanup_token::initialize_token_vec(const size_t n_tokens)
 }
 //=========================================================================================================
 
-class frame_predicate {
+class FramePredicate {
 public:
-    virtual bool operator()(const frame_cleanup_token& b) const=0;
-    virtual ~frame_predicate() {}
+    virtual bool operator()(const FrameCleanupToken& b) const=0;
+    virtual ~FramePredicate() {}
 };
 
-class dummy_frame_predicate: public frame_predicate {
-    bool operator()(const frame_cleanup_token&)const {return true;}
+class DummyFramePredicate: public FramePredicate {
+    bool operator()(const FrameCleanupToken&)const {return true;}
 };
-static dummy_frame_predicate dummy_predicate;
+static DummyFramePredicate dummy_predicate;
 
 //=========================================================================================================
 //filters...
@@ -84,10 +84,10 @@ static dummy_frame_predicate dummy_predicate;
 //Input and output filters.
 
 //Initial buffering filter:
-template < class T = frame_cleanup_token>
-class Sequential_File_Buffer_Filter: public tbb::filter {
+template < class T = FrameCleanupToken>
+class SequentialFileBufferFilter: public tbb::filter {
 public:
-    Sequential_File_Buffer_Filter(const vector<FrameInfo>& frame_info_vec,
+    SequentialFileBufferFilter(const vector<FrameInfo>& frame_info_vec,
                                   size_t n_frames_to_load=0);
     size_t bytes_loaded() {return bytes_off_disk;}
     size_t n_frames_set_to_process() const {return frm_inf_vec.size();}
@@ -97,7 +97,7 @@ private:
     vector<FrameInfo> frm_inf_vec;
     vector<FrameInfo>::size_type current_posn_index;
     size_t next_buffer, bytes_off_disk, counter;
-    vector<frame_cleanup_token*> token_buffer_ptrs;
+    vector<FrameCleanupToken*> token_buffer_ptrs;
     vector<T> token_buffers;
 
 };
@@ -105,9 +105,9 @@ private:
 
 //NB decompresses to an image<unsigned int>
 ///in case of uncompressed files, this simply loads the fits file from a buffer, which should happen very quickly
-class Decompress_Filter: public tbb::filter {
+class DecompressFilter: public tbb::filter {
 public:
-    Decompress_Filter():filter(parallel) {}
+    DecompressFilter():filter(parallel) {}
     void* operator()(void*);
 };
 
@@ -118,28 +118,28 @@ public:
 //---------------------------------------------------------------------------------------------------------------
 
 //For outputting a small subset of files, based on a predicate:
-class Frame_Output_Filter: public tbb::filter {
+class FrameOutputFilter: public tbb::filter {
 public:
-    Frame_Output_Filter(const std::string& output_folder_,
-                        const frame_predicate& predicate=dummy_predicate):
+    FrameOutputFilter(const std::string& output_folder_,
+                        const FramePredicate& predicate=dummy_predicate):
         tbb::filter(serial_in_order),
         output_folder(output_folder_),
         n_frames_output(0),
-        frame_predicate_ref(predicate) {}
+        FramePredicate_ref(predicate) {}
     void* operator()(void* item);
     size_t number_of_frames_output() const {return n_frames_output;}
 private:
     const std::string output_folder;
     size_t n_frames_output;
-    const frame_predicate & frame_predicate_ref;
+    const FramePredicate & FramePredicate_ref;
 };
 
 //---------------------------------------------------------------------------------------------------------------
 
 //For outputting every file:
-class Frame_Sequential_Write_Filter: public tbb::filter {
+class FrameSequentialWriteFilter: public tbb::filter {
 public:
-    Frame_Sequential_Write_Filter(const string& output_dir_):filter(serial_in_order),
+    FrameSequentialWriteFilter(const string& output_dir_):filter(serial_in_order),
         output_dir(output_dir_) {}
     void* operator()(void*);
 private:
@@ -148,9 +148,9 @@ private:
 //---------------------------------------------------------------------------------------------------------------
 
 //To collect a new vector of frame_info with the guide star registration / cosmic ray info
-class Frame_Info_Collection_Filter: public tbb::filter {
+class FrameInfoCollectionFilter: public tbb::filter {
 public:
-    Frame_Info_Collection_Filter(size_t list_size): tbb::filter(
+    FrameInfoCollectionFilter(size_t list_size): tbb::filter(
             serial_in_order) {frames.reserve(list_size);}
     void* operator()(void* item);
     vector<FrameInfo> collected_frames() {return frames;}
@@ -161,9 +161,9 @@ private:
 //---------------------------------------------------------------------------------------------------------------
 
 //To ensure the circular buffer is used correctly:
-class Serial_Decommission_Filter: public tbb::filter {
+class SerialDecommissionFilter: public tbb::filter {
 public:
-    Serial_Decommission_Filter(): tbb::filter(serial_in_order) {}
+    SerialDecommissionFilter(): tbb::filter(serial_in_order) {}
     void* operator()(void* item);
 };
 //---------------------------------------------------------------------------------------------------------------
@@ -172,9 +172,9 @@ public:
 
 //General purpose filters that can be inserted pretty much anywhere along the pipeline.
 //---------------------------------------------------------------------------------------------------------------
-class File_Timestamp_Imprinting_Filter: public tbb::filter {
+class FileTimestampImprintingFilter: public tbb::filter {
 public:
-    File_Timestamp_Imprinting_Filter(const FrameInfo& first_frame,
+    FileTimestampImprintingFilter(const FrameInfo& first_frame,
                                      const double milliseconds_per_frame_);
     void* operator()(void*);
 private:
@@ -185,22 +185,22 @@ private:
 };
 
 //---------------------------------------------------------------------------------------------------------------
-class Timestamp_Load_Filter: public tbb::filter {
+class TimestampLoadFilter: public tbb::filter {
 public:
-    Timestamp_Load_Filter():filter(parallel) {}
+    TimestampLoadFilter():filter(parallel) {}
     void* operator()(void*);
 };
 
 //---------------------------------------------------------------------------------------------------------------
 
-class Frame_Count_Display_Filter: public tbb::filter {
+class FrameCountDisplayFilter: public tbb::filter {
 public:
-    Frame_Count_Display_Filter(bool display_frame_count_,
-                               const frame_predicate& predicate=dummy_predicate,
+    FrameCountDisplayFilter(bool display_frame_count_,
+                               const FramePredicate& predicate=dummy_predicate,
                                const size_t flag_throw_limit=0):
         filter(serial_in_order), counter(0),
         display_frame_count(display_frame_count_),
-        frame_predicate_ref(predicate),
+        FramePredicate_ref(predicate),
         throw_limit(flag_throw_limit)
     {}
     void* operator()(void*);
@@ -209,7 +209,7 @@ public:
 private:
     size_t counter;
     const bool display_frame_count;
-    const frame_predicate& frame_predicate_ref;
+    const FramePredicate& FramePredicate_ref;
     const size_t throw_limit;
 };
 
@@ -250,10 +250,10 @@ private:
 //Filters that should be used on debiased data (i.e. they work on the image<float>)
 
 //---------------------------------------------------------------------------------------------------------------
-class Pixel_Time_Series_Record: public tbb::filter {
+class PixelTimeSeriesRecord: public tbb::filter {
 public:
     typedef std::pair< int, double> pixel_event; //frame id, pixel value
-    Pixel_Time_Series_Record(const vector<PixelIndex>& pixels_to_watch,
+    PixelTimeSeriesRecord(const vector<PixelIndex>& pixels_to_watch,
                              const size_t n_frames_estimate);
     void* operator()(void* item);
 
@@ -264,9 +264,9 @@ private:
     vector < vector< pixel_event > > pixval_series;
 };
 //---------------------------------------------------------------------------------------------------------------
-class Col_Histogram_Gather: public tbb::filter {
+class ColHistogramGather: public tbb::filter {
 public:
-    Col_Histogram_Gather(const PixelRange& image_layout,
+    ColHistogramGather(const PixelRange& image_layout,
                          int y_range_low, int y_range_high);
 
     void* operator()(void*);
@@ -277,9 +277,9 @@ private:
     const int y_lo, y_hi;
 };
 //---------------------------------------------------------------------------------------------------------------
-class RowHistogram_Gather: public tbb::filter {
+class RowHistogramGather: public tbb::filter {
 public:
-    RowHistogram_Gather(const PixelRange& image_layout,
+    RowHistogramGather(const PixelRange& image_layout,
                         int x_range_low);
 
     void* operator()(void*);
@@ -303,9 +303,9 @@ public:
 
 //            BiasFrameSubtractor_Filter(const image<double>& image_to_subtract):filter(parallel), bias_frame(image_to_subtract){}
     /*override*/void* operator()(void* item);
-    void set_bias_frame(const CCDImage<float>& bias_frame_input) {bias_frame=bias_frame_input;}
+    void set_bias_frame(const CcdImage<float>& bias_frame_input) {bias_frame=bias_frame_input;}
 private:
-    CCDImage<float> bias_frame;
+    CcdImage<float> bias_frame;
 };
 //---------------------------------------------------------------------------------------------------------------
 //to do: templatize (worth the effort?)
@@ -337,9 +337,9 @@ private:
 //    PixelRange hist_box_;
 //};
 //---------------------------------------------------------------------------------------------------------------
-struct registration_data_struct {
-    vector<CCD_BoxRegion> gs_regions;
-    psf_models::reference_psf ref_psf;
+struct RegistrationData {
+    vector<CcdBoxRegion> gs_regions;
+    psf_models::ReferencePsf ref_psf;
     double analysis_resample_factor, convolution_threshold;
 };
 
@@ -347,8 +347,8 @@ struct registration_data_struct {
 class CrossCorrelator: public tbb::filter {
 public:
     CrossCorrelator(
-        const vector<CCD_BoxRegion>& gs_regions_init,
-        const psf_models::reference_psf& kernel_init,
+        const vector<CcdBoxRegion>& gs_regions_init,
+        const psf_models::ReferencePsf& kernel_init,
         const double input_resample_factor,
         const double convolution_threshold_factor,
         const double ray_proximity_limit_in_pixels,
@@ -356,40 +356,40 @@ public:
 
     void* operator()(void* item);
 private:
-    registration_data_struct reg_data_copies_[lucky_n_tokens];
+    RegistrationData reg_data_copies_[lucky_n_tokens];
     const bool use_parabola_fitting_;
     const double ray_proximity_limit_;
 };
 //---------------------------------------------------------------------------------------------------------------
-class Dynamic_Row_Debias: public tbb::filter {
+class DynamicRowDebias: public tbb::filter {
 public:
-    Dynamic_Row_Debias():filter(
+    DynamicRowDebias():filter(
             parallel) {} //NB CCD_id merely supplied for debugging purposes,
     //and to emphasise that this should not be used with a multi-CCD token stream!
 
     /*override*/void* operator()(void* item);
 };
 //---------------------------------------------------------------------------------------------------------------
-class Frame_Summation: public tbb::filter {
+class FrameSummation: public tbb::filter {
 public:
-    Frame_Summation(const PixelRange& image_layout, const CCD_BoxRegion& image_region):
+    FrameSummation(const PixelRange& image_layout, const CcdBoxRegion& image_region):
         tbb::filter(serial_out_of_order),
         n_frames_summed(0) {
         sum.pix = PixelArray2d<double>(image_layout.x_dim(), image_layout.y_dim(), 0.0);
         sum.initialize_CCD_grid_to_specific_region(image_region);
     }
     void* operator()(void* item);
-    CCDImage<double> Sum() {return sum;}
+    CcdImage<double> Sum() {return sum;}
     size_t N_Frames() {return n_frames_summed;}
-    CCDImage<double> Avg();
+    CcdImage<double> Avg();
 private:
-    CCDImage<double> sum;
+    CcdImage<double> sum;
     size_t n_frames_summed;
 };
 //---------------------------------------------------------------------------------------------------------------
-class Region_Centroid: public tbb::filter {
+class RegionCentroid: public tbb::filter {
 public:
-    Region_Centroid(const PixelRange& GS_box_, size_t list_size):
+    RegionCentroid(const PixelRange& GS_box_, size_t list_size):
         tbb::filter(serial_in_order), GS_box(GS_box_) {frames.reserve(list_size);}
     void* operator()(void* item);
     vector<FrameInfo> collected_frames() {return frames;}
@@ -401,9 +401,9 @@ private:
 
 //---------------------------------------------------------------------------------------------------------------
 
-class Cosmic_Ray_Candidate_Detection: public tbb::filter {
+class CosmicRayCandidateDetection: public tbb::filter {
 public:
-    Cosmic_Ray_Candidate_Detection(double raw_count_threshold):
+    CosmicRayCandidateDetection(double raw_count_threshold):
         tbb::filter(parallel),
         threshold(raw_count_threshold),
         n_frames_with_candidates(0)
@@ -418,9 +418,9 @@ private:
 
 //---------------------------------------------------------------------------------------------------------------
 
-class Cosmic_Ray_Confirmation: public tbb::filter {
+class CosmicRayConfirmation: public tbb::filter {
 public:
-    Cosmic_Ray_Confirmation(const double frame_to_frame_reduction_factor,
+    CosmicRayConfirmation(const double frame_to_frame_reduction_factor,
                             const double pixel_spaced_reduction_factor):
         tbb::filter(serial_in_order), first_frame(true),
         temporal_reduction_factor(frame_to_frame_reduction_factor),
@@ -432,16 +432,16 @@ public:
 private:
     bool first_frame;
     FrameInfo prev_frame_inf;
-    CCDImage<float> prev_bmp;
+    CcdImage<float> prev_bmp;
     const double temporal_reduction_factor, spatial_reduction_factor;
     size_t n_frames_with_confirmed_rays;
 };
 
 //---------------------------------------------------------------------------------------------------------------
 
-class Cosmic_Ray_Diagnosis_Output: public tbb::filter {
+class CosmicRayDiagnosisOutput: public tbb::filter {
 public:
-    Cosmic_Ray_Diagnosis_Output(const std::string& CCD_output_folder,
+    CosmicRayDiagnosisOutput(const std::string& CCD_output_folder,
                                 const std::string& cr_diag_subfolder):
         tbb::filter(serial_in_order), output_folder(CCD_output_folder+cr_diag_subfolder) {
         boost::filesystem::create_directories(output_folder+"/confirmed_clearly");

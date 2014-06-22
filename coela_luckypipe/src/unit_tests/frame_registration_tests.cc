@@ -22,20 +22,20 @@ SUITE(frame_registration)
 
     TEST(find_best_psf_match) {
 
-        CCDImage<double> construction_image;
+        CcdImage<double> construction_image;
         construction_image.pix = PixelArray2d<double>(200,200,0.0);
 
         construction_image.initialize_CCD_grid_to_specific_offset_and_scale(
-            CCD_Position(0,0), 0.25);
+            CcdPosition(0,0), 0.25);
 
-        psf_models::reference_psf ref_psf4x;
+        psf_models::ReferencePsf ref_psf4x;
 
         bool output_to_screen=false;
 
         ref_psf4x.psf_image.pix =PixelArray2d<double>(40, 40, 0);
         ref_psf4x.exact_centre = PixelPosition(20.61,20.61);
         ref_psf4x.central_pixel = PixelPosition::pixel_containing_point(ref_psf4x.exact_centre);
-        ref_psf4x.psf_image.initialize_CCD_grid_to_specific_offset_and_scale(CCD_Position(0,0),
+        ref_psf4x.psf_image.initialize_CCD_grid_to_specific_offset_and_scale(CcdPosition(0,0),
                 0.25);
         for (PixelIterator i(ref_psf4x.psf_image.pix.range()); i!=i.end; ++i) {
             ref_psf4x.psf_image.pix(i) =
@@ -56,7 +56,7 @@ SUITE(frame_registration)
         construction_image.write_to_file(test_suite_output_dir+"construction_img.fits");
         ref_psf4x.psf_image.write_to_file(test_suite_output_dir+"ref_psf4x.fits");
 
-        psf_models::reference_psf ref_psf1x = ref_psf4x;
+        psf_models::ReferencePsf ref_psf1x = ref_psf4x;
         ref_psf1x.exact_centre.x/=4.0;  ref_psf1x.exact_centre.y/=4.0;
         ref_psf1x.central_pixel = PixelPosition::pixel_containing_point(ref_psf1x.exact_centre);
         ref_psf1x.psf_image = image_utils::bin_image(ref_psf4x.psf_image, 4);
@@ -70,18 +70,18 @@ SUITE(frame_registration)
                     expected_img_centre.x,
                     0.01);
 
-        CCD_Position known_image_centre =
+        CcdPosition known_image_centre =
             construction_image.CCD_grid.corresponding_grid_Position(expected_img_centre);
 
 
-        CCDImage<double> test_image = image_utils::bin_image(construction_image, 4);
+        CcdImage<double> test_image = image_utils::bin_image(construction_image, 4);
         test_image.write_to_file(test_suite_output_dir+"binned_img.fits");
 
         CHECK_CLOSE(1.0, test_image.CCD_grid.pixel_width_, 1e-6);
 
-        CCD_BoxRegion search_region(5,5,45,45);
+        CcdBoxRegion search_region(5,5,45,45);
 
-        frame_registration::gs_lock<CCD_Position> lock1x =
+        frame_registration::GuideStarLock<CcdPosition> lock1x =
             frame_registration::find_best_psf_match(test_image,
                     search_region,
                     ref_psf1x,
@@ -96,7 +96,7 @@ SUITE(frame_registration)
             cerr<<"1x error: " << coord_distance(known_image_centre  ,lock1x.Position)<<endl;
             cerr<<"1x error xy: " << known_image_centre  - lock1x.Position<<endl;
         }
-        frame_registration::gs_lock<CCD_Position> lock1x_parabolic =
+        frame_registration::GuideStarLock<CcdPosition> lock1x_parabolic =
             frame_registration::find_best_psf_match(test_image,
                     search_region,
                     ref_psf1x,
@@ -113,7 +113,7 @@ SUITE(frame_registration)
             cerr<<"1x parabolic error xy: " << known_image_centre  - lock1x_parabolic.Position<<endl;
         }
 
-        frame_registration::gs_lock<CCD_Position> lock4x =
+        frame_registration::GuideStarLock<CcdPosition> lock4x =
             frame_registration::find_best_psf_match(test_image,
                     search_region,
                     ref_psf4x,
@@ -127,7 +127,7 @@ SUITE(frame_registration)
             cerr<<"4x error: " << coord_distance(known_image_centre ,lock4x.Position)<<endl;
             cerr<<"4x error xy: " << known_image_centre - lock4x.Position<<endl;
         }
-        frame_registration::gs_lock<CCD_Position> lock4x_parabolic =
+        frame_registration::GuideStarLock<CcdPosition> lock4x_parabolic =
             frame_registration::find_best_psf_match(test_image,
                     search_region,
                     ref_psf4x,

@@ -20,20 +20,20 @@ namespace gain_utils {
 //    typedef image<double> double_bitmap;
 //======================================================================================================================
 
-struct gain_info {
+struct GainData {
     double bias_pedestal, readout_sigma;
     double gain;
     double N_dark_pix, N_light_pix, N_serial_CIC_pix;
     double photon_event_freq, serial_CIC_rate;
 //    double serial_CIC_gain;
     long actual_number_pix_events_recorded;
-    gain_info(); ///<initializes all members to negative values so it's obvious what is undetermined
-    gain_info(const string& filename);
+    GainData(); ///<initializes all members to negative values so it's obvious what is undetermined
+    GainData(const string& filename);
 
     void write_to_file(const std::string& filename);
     static std::string get_column_headers();
 };
-std::ostream& operator<<(std::ostream& os, const gain_info& g_inf);
+std::ostream& operator<<(std::ostream& os, const GainData& g_inf);
 
 //======================================================================================================================
 
@@ -41,9 +41,9 @@ std::ostream& operator<<(std::ostream& os, const gain_info& g_inf);
 
 
 //to do: templatize (worth the effort?)
-void append_histogram_data_from_float_bitmap_region(const CCDImage<float>& bmp,
+void append_histogram_data_from_float_bitmap_region(const CcdImage<float>& bmp,
         const PixelRange& rgn, HistogramContainer14bit& hist);
-void append_histogram_data_from_float_bitmap_region(const CCDImage<float>& bmp,
+void append_histogram_data_from_float_bitmap_region(const CcdImage<float>& bmp,
         const PixelRange& rgn, HistogramContainer10bit& hist);
 
 
@@ -74,12 +74,12 @@ map<int, double> convolve_histogram_with_gaussian(const map<int, double>& model_
         const double readout_sigma,
         const int kernel_half_width);
 //==================================================================================
-class gaussian_histogram_fit_FCN:public ROOT::Minuit2::FCNBase {
+class GaussianHistogramFitFCN:public ROOT::Minuit2::FCNBase {
 
 public:
-    gaussian_histogram_fit_FCN(const map<int,long>& histogram):data(histogram),
+    GaussianHistogramFitFCN(const map<int,long>& histogram):data(histogram),
         error_def(1.0) {}
-    ~gaussian_histogram_fit_FCN() {}
+    ~GaussianHistogramFitFCN() {}
     virtual double  Up() const {return error_def;}
     virtual double operator()(const std::vector<double>& gauss_pars)
     const;  //Params: zero value, peak_count, sigma.
@@ -91,11 +91,11 @@ private:
 };
 //==================================================================================
 
-class exponential_histogram_fit_FCN:public ROOT::Minuit2::FCNBase {
+class ExponentialHistogramFitFCN:public ROOT::Minuit2::FCNBase {
 public:
-    exponential_histogram_fit_FCN(const map<int,long>& histogram):
+    ExponentialHistogramFitFCN(const map<int,long>& histogram):
         error_def(1.0), data(histogram) {}
-    ~exponential_histogram_fit_FCN() {}
+    ~ExponentialHistogramFitFCN() {}
     virtual double  Up() const {return error_def;}
     virtual double operator()(const std::vector<double>& exp_pars)
     const;  //Params:  amplitude, gain
@@ -115,10 +115,10 @@ private:
 //            const double N_CICIR_pix);
 //};
 
-class full_EMCCD_histogram_fit_FCN: public ROOT::Minuit2::FCNBase {
+class FullEmccdHistogramFitFCN: public ROOT::Minuit2::FCNBase {
 public:
-    full_EMCCD_histogram_fit_FCN(const map<int,long>& histogram);
-    full_EMCCD_histogram_fit_FCN(const map<int,long>& histogram,
+    FullEmccdHistogramFitFCN(const map<int,long>& histogram);
+    FullEmccdHistogramFitFCN(const map<int,long>& histogram,
                                  const int fit_region_min, const int fit_region_max);
 
 
@@ -135,7 +135,7 @@ public:
             const int N_EM_stages,
             const int max_val_to_generate);
 
-    static vector<double> generate_pars_vec(const gain_info&);
+    static vector<double> generate_pars_vec(const GainData&);
 
 
 private:
@@ -153,9 +153,9 @@ private:
 //                                const double threshold_in_photo_electrons,
 //                                const bool output_to_screen=false);
 //==================================================================================
-class Thresholded_SNR_Calculator {
+class ThresholdedSnrCalculator {
 public:
-    Thresholded_SNR_Calculator(const double readout_noise_in_ADU,
+    ThresholdedSnrCalculator(const double readout_noise_in_ADU,
                                const double mean_photon_gain_in_ADU,
                                const double light_level,
                                const double CICIR_event_rate_per_pixel_readout
@@ -182,7 +182,7 @@ double calculate_linear_mode_SNR(const double readout_noise_in_ADU,
 
 //class ThresholdOptimizingFCN: public ROOT::Minuit2::FCNBase{
 //public:
-//    ThresholdOptimizingFCN( const Thresholded_SNR_Calculator& x): calc_(x){}
+//    ThresholdOptimizingFCN( const ThresholdedSnrCalculator& x): calc_(x){}
 //
 //    virtual double operator()(const std::vector<double>& pars) const{
 //        assert(pars.size()==1);
@@ -192,7 +192,7 @@ double calculate_linear_mode_SNR(const double readout_noise_in_ADU,
 //    virtual double Up() const {return 1.0;}
 //
 //private:
-//    Thresholded_SNR_Calculator calc_;
+//    ThresholdedSnrCalculator calc_;
 //};
 
 //==================================================================================
@@ -231,14 +231,14 @@ vector<double> fit_exponential_tail_fixed_gain(const map<int,long>& histogram_da
         const double gaussian_sigma_estimate, const double gain_estimate,
         const bool output_to_screen=false);
 
-gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
-                             const gain_info& approx_fit,
+GainData fit_full_CCD_model(const map<int,long>& histogram_data,
+                             const GainData& approx_fit,
                              const bool output_to_screen
 //,
 //        const bool sqrt_serial_CIC_gain_mode=false
                             );
 
-gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
+GainData fit_CCD_histogram(const map<int,long>& histogram_bins,
                             const bool perform_advanced_fit=false,
                             const bool fixed_gain_mode=false, const double gain_value=0.0,
                             const bool output_to_screen=false
@@ -249,23 +249,23 @@ gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
 
 
 template<typename input_datatype>
-CCDImage<input_datatype>& normalise_CCD_with_uniform_gain(CCDImage<input_datatype>& input,
-        const gain_info& det_info);
+CcdImage<input_datatype>& normalise_CCD_with_uniform_gain(CcdImage<input_datatype>& input,
+        const GainData& det_info);
 //==================================================================================
 
-//image<float>& normalise_CCD_with_gain_map(double_bitmap& input, const gain_info& det_info, const double_bitmap& gain_map);
+//image<float>& normalise_CCD_with_gain_map(double_bitmap& input, const GainData& det_info, const double_bitmap& gain_map);
 
-CCDImage<float> threshold_bitmap(const CCDImage<float>& normalized_input,
+CcdImage<float> threshold_bitmap(const CcdImage<float>& normalized_input,
                                  const double normalized_threshold);
 
 
 
 ///Threshold mask can be considered boolean: 1 --> Apply thresholding here, 0--> Bright region, No thresholding
-CCDImage<float> create_threshold_mask(const CCDImage<float>& raw_input,
+CcdImage<float> create_threshold_mask(const CcdImage<float>& raw_input,
                                       const float threshold_count);
 
 
-//gain_info analyse_histogram(const map<int, long>& full_data_histogram , const string& output_dir);
+//GainData analyse_histogram(const map<int, long>& full_data_histogram , const string& output_dir);
 
 
 //define templates:

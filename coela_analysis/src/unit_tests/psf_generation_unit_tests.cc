@@ -26,13 +26,13 @@ SUITE(psf_generation)
     TEST(gaussian_generation) {
         PixelRange img_size(1,1,50,50);
         double peak=5.0, sigma=1.2;
-        psf_models::gaussian_psf_model g_model(peak, sigma);
+        psf_models::GaussianPsfModel g_model(peak, sigma);
 
-        CCD_Position true_centre(img_size.x_dim()/2.0 + 0.5, img_size.y_dim()/2.0 +0.5);
+        CcdPosition true_centre(img_size.x_dim()/2.0 + 0.5, img_size.y_dim()/2.0 +0.5);
 
-        psf_models::reference_psf ref_psf =
+        psf_models::ReferencePsf ref_psf =
             psf_models::generate_psf(g_model, img_size,
-                                     CCD_Position(0,0),
+                                     CcdPosition(0,0),
                                      true_centre,
                                      1.0,
                                      2);
@@ -43,7 +43,7 @@ SUITE(psf_generation)
         PixelPosition centroid = pixel_array_routines::centroid(ref_psf.psf_image.pix,
                                  ref_psf.psf_image.pix.range());
 
-        CCD_Position CCD_centroid = ref_psf.psf_image.CCD_grid.
+        CcdPosition CCD_centroid = ref_psf.psf_image.CCD_grid.
                                     corresponding_grid_Position(centroid);
 
         CHECK_CLOSE(CCD_centroid.x, true_centre.x, 0.01);
@@ -66,7 +66,7 @@ SUITE(psf_generation)
         double nyquist_pixel_width_rads = lambda / d / 2.0;
 
         double central_obscuration=0.0;
-        psf_models::airy_psf_model airy_gen(
+        psf_models::AiryPsfModel airy_gen(
             1,
             nyquist_pixel_width_rads,
             lambda,

@@ -20,7 +20,7 @@ std::vector<std::string> all_ds9_strings()
     using std::vector; using std::string;
     vector<string> v;
     v.push_back(pixels::ds9_string());
-    v.push_back(CCD::ds9_string());
+    v.push_back(ccd::ds9_string());
     v.push_back(mosaic::ds9_string());
     v.push_back(wcs::ds9_string());
     return v;
@@ -174,7 +174,7 @@ PixelBoxRegion PixelBoxRegion::pixel_box_outline(const PixelRange& box)
 //=======================================================================================================
 
 template class RectangularRegion<coordinate_types::pixels>;
-template class RectangularRegion<coordinate_types::CCD>;
+template class RectangularRegion<coordinate_types::ccd>;
 template class RectangularRegion<coordinate_types::mosaic>;
 
 

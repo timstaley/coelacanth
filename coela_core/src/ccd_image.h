@@ -13,7 +13,7 @@
 
 namespace coela {
 //=========================================================================================================
-// CCDImage:
+// CcdImage:
 /** Ties together a pixel_array with associated spatial regions.
 Provides:
     - Convenience routines to load both pixel data and 'CCDGrid' data from a FITS file.
@@ -21,32 +21,32 @@ Provides:
     - Sub-image creation with appropriate spatial region assignment.
 */
 template<typename data_type>
-struct CCDImage {
+struct CcdImage {
 public:
     //------------------------------------------------------------------------
     //public Data:
     //------------------------------------------------------------------------
     ///Array member is made public
     PixelArray2d<data_type> pix;
-    ImageGrid<coordinate_types::CCD> CCD_grid;
+    ImageGrid<coordinate_types::ccd> CCD_grid;
     //-------------------------------------------------------------------------
     //Constructors & input / output
     //-------------------------------------------------------------------------
-    CCDImage();///< Null init.
+    CcdImage();///< Null init.
 
     //initialize from different data type
     //Explicit, since it may involve loss of precision.
     template<typename U>
-    explicit CCDImage(const CCDImage<U>& lower_precision_data_type_image);
+    explicit CcdImage(const CcdImage<U>& lower_precision_data_type_image);
 
     ///Creating sub-image via CCD / frame / pixel box specs.
     /// This manages the PixelArray and also updates co-ord grids.
-    static CCDImage sub_image(const CCDImage&, const CCD_BoxRegion& img_rgn);
-    static CCDImage sub_image(const CCDImage&, const PixelBoxRegion& img_rgn);
-    static CCDImage sub_image(const CCDImage&, const PixelRange& img_rgn);
+    static CcdImage sub_image(const CcdImage&, const CcdBoxRegion& img_rgn);
+    static CcdImage sub_image(const CcdImage&, const PixelBoxRegion& img_rgn);
+    static CcdImage sub_image(const CcdImage&, const PixelRange& img_rgn);
 
     ///File load constructor / write to file (just wrappers to stream funcs)
-    CCDImage(const std::string& filename,
+    CcdImage(const std::string& filename,
              const size_t header_begin_offset_in_bytes=0);
 
     void write_to_file(const std::string& filename,
@@ -54,17 +54,17 @@ public:
                        const ArrayCompressionInfo=ArrayCompressionInfo::no_compression()
                       ) const;
 
-    static CCDImage load_from_unknown_filetype(const std::string& filename,
+    static CcdImage load_from_unknown_filetype(const std::string& filename,
             const size_t header_begin_offset_in_bytes=0);
 
-    static CCDImage load_image_from_buffered_data(
+    static CcdImage load_image_from_buffered_data(
         const FileBuffer&,
         const FitsHeader& preloaded_header,
         const size_t data_begin_byte_offset);
 
 
     ///NB!!! z_index = 1,2,3.... N   (not 0,1,...,N-1) in accordance with FITS convention
-    static CCDImage load_from_cube_FITS_file(const std::string& filename,
+    static CcdImage load_from_cube_FITS_file(const std::string& filename,
             const size_t z_index);
 
 //    static image load_image_from_buffered_cube_slice(
@@ -100,10 +100,10 @@ public:
 
     //Setter funcs:
     void initialize_CCD_grid_for_raw_data();
-    void initialize_CCD_grid_to_specific_region(const CCD_BoxRegion& ccd_region);
+    void initialize_CCD_grid_to_specific_region(const CcdBoxRegion& ccd_region);
 
     void initialize_CCD_grid_to_specific_offset_and_scale(
-        const CCD_Position& ccd_low_corner,
+        const CcdPosition& ccd_low_corner,
         const double pixel_width_in_CCD_coords);
 
 };

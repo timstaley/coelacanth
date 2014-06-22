@@ -13,10 +13,10 @@
 
 namespace coela {
 
-struct CCD_DatasetInfo {
-    CCD_DatasetInfo():ccd_id(-1), uniform_bias_pedestal_estimate(0.0) {}
+struct CcdDatasetInfo {
+    CcdDatasetInfo():ccd_id(-1), uniform_bias_pedestal_estimate(0.0) {}
 
-    CCD_DatasetInfo(const std::string& dataset_info_filename);
+    CcdDatasetInfo(const std::string& dataset_info_filename);
     void write_to_file(const std::string& filename) const;
 
 
@@ -40,8 +40,8 @@ struct CCD_DatasetInfo {
 
 
 private:
-    friend std::ostream& operator<<(std::ostream& os, const CCD_DatasetInfo& cdi);
-    friend std::istream& operator>>(std::istream& is, CCD_DatasetInfo& cdi);
+    friend std::ostream& operator<<(std::ostream& os, const CcdDatasetInfo& cdi);
+    friend std::istream& operator>>(std::istream& is, CcdDatasetInfo& cdi);
 
     void load_from_text_vec(const std::vector<std::string>&);
 

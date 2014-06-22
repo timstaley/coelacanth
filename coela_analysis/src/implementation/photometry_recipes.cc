@@ -9,7 +9,7 @@ double aperture_flux(const PixelArray2d<double>& img,
                      size_t* n_pixels_in_aperture_ret_ptr)
 {
 
-    regions::circular_aperture<coordinate_types::pixels>
+    regions::CircularAperture<coordinate_types::pixels>
     photometry_ap(PixelPosition::centre_of_pixel(
                       PixelPosition::pixel_containing_point(centre)),
                   pixel_radius);

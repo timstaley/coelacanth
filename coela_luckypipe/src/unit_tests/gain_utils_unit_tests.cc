@@ -70,7 +70,7 @@ SUITE(gain_utils){
             blank_hist[value] = 0;
         }
 
-        gain_utils::full_EMCCD_histogram_fit_FCN full_model(blank_hist);
+        gain_utils::FullEmccdHistogramFitFCN full_model(blank_hist);
         double gain= 100;
         int N_CICIR_pix =  500000;
         int max_val_to_generate = 12000;
@@ -106,7 +106,7 @@ SUITE(gain_utils){
 //        const double CICIR_rate=0.05;
 //        const double threshold=0.3;
 //
-//        gain_utils::Thresholded_SNR_Calculator calc1(
+//        gain_utils::ThresholdedSnrCalculator calc1(
 //                RO,
 //                gain,
 //                light_level,
@@ -124,7 +124,7 @@ SUITE(gain_utils){
         const double CICIR_rate=0.00;
         const double threshold=0.1;
 
-        gain_utils::Thresholded_SNR_Calculator ideal_case(
+        gain_utils::ThresholdedSnrCalculator ideal_case(
                 RO,
                 gain,
                 light_level,
@@ -144,7 +144,7 @@ SUITE(gain_utils){
 
 //
 //    TEST(readout_model_consistency){
-//        gain_utils::gain_info model_pars;
+//        gain_utils::GainData model_pars;
 //        model_pars.bias_pedestal = 25;
 //        model_pars.readout_sigma = 12.5;
 //        model_pars.N_dark_pix = 100000;
@@ -165,7 +165,7 @@ SUITE(gain_utils){
 //        for (int value=0; value!=15000; value++){
 //            blank_hist[value] = 0;
 //        }
-//        gain_utils::full_EMCCD_histogram_fit_FCN full_model(blank_hist);
+//        gain_utils::FullEmccdHistogramFitFCN full_model(blank_hist);
 //
 //        map<int, double> model_hist = full_model.get_model_histogram(model_pars_vec);
 //

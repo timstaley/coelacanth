@@ -16,11 +16,11 @@ additional ImageGrid.
 
 
 template<typename data_type>
-struct MosaicImage: public CCDImage<data_type> {
+struct MosaicImage: public CcdImage<data_type> {
 public:
     //------------------------------------------------
     //Data:
-    //Inherits pix, CCD_grid from CCDImage
+    //Inherits pix, CCD_grid from CcdImage
     ImageGrid<coordinate_types::mosaic> mosaic_grid;
     //------------------------------------------------
 
@@ -28,7 +28,7 @@ public:
 
     ///Cast a CcdImage to a MosaicImage (with blank mosaic_grid).
     ///(This is OK, since mosaic_grid can be checked with .is_initialized ).
-    MosaicImage(const CCDImage<data_type>& rhs);
+    MosaicImage(const CcdImage<data_type>& rhs);
 
     void initialize_mosaic_grid_to_specific_region(
         const MosaicBoxRegion& mosaic_region,bool no_throw=false);

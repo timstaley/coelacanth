@@ -22,24 +22,24 @@ generally stored as a line of text in a .reg file.
 All constructors are via static functions ("Named constructor idiom")
 since this helps to distinguish the different cases.
 */
-class DS9Region {
+class Ds9Region {
 public:
-    DS9Region() {}
+    Ds9Region() {}
 
     ///Construct 'point' marker from specified Position.
     template<class T>
-    static DS9Region point(const Position<T>&,
+    static Ds9Region point(const Position<T>&,
                            const std::string marker_type_string="x");
 
     ///Construct box from RectangularRegion
     template<class T>
-    static DS9Region box(const RectangularRegion<T>&);
+    static Ds9Region box(const RectangularRegion<T>&);
 
-    static std::vector<DS9Region> load_regions_from_file(
+    static std::vector<Ds9Region> load_regions_from_file(
         const std::string& filename);
 
     static void save_regions_to_file(const std::string& filename,
-                                     const std::vector<DS9Region>&);
+                                     const std::vector<Ds9Region>&);
 
     ///Cast to Position
     template<class ref_frame>
@@ -51,8 +51,8 @@ public:
 
 
 private:
-    friend std::ostream& operator<<(std::ostream& , const DS9Region&);
-    friend std::istream& operator>>(std::istream& , DS9Region&);
+    friend std::ostream& operator<<(std::ostream& , const Ds9Region&);
+    friend std::istream& operator>>(std::istream& , Ds9Region&);
     //------------------------------------------------------------------------------------------
     //Data members:
     std::vector<double> parameters;
@@ -60,7 +60,7 @@ private:
     //------------------------------------------------------------------------------------------
 
     //handy string constructor
-    DS9Region(const std::string& type, const std::string& ref_frame,
+    Ds9Region(const std::string& type, const std::string& ref_frame,
               const std::string& sub_type);
 };
 

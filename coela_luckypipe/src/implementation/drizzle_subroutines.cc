@@ -77,16 +77,16 @@ MosaicImage<double> init_blank_mosaic_frame(const MosaicBoxRegion& mosaic_region
 }
 
 //=======================================================================================
-CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
-    const CCD_DatasetInfo& cdi,
+CcdDrizzleData CcdDrizzleData::prep_drizzle_info(
+    const CcdDatasetInfo& cdi,
     const DrizzleSettings& ds,
     const CameraConfigInfo& cam_conf,
     const string& drizzle_dir
 )
 {
 
-    CCD_specific_drizzle_inf drz_inf(cdi.ccd_id);
-    CCD_calibration_info ccd_chars = cam_conf.get_calibration_info_for_CCD_id(cdi.ccd_id);
+    CcdDrizzleData drz_inf(cdi.ccd_id);
+    CcdCalibrationInfo ccd_chars = cam_conf.get_calibration_info_for_CCD_id(cdi.ccd_id);
 
     ////========================   Load information abour mosaic layout, determine and initialise output frame  ===============================
     drz_inf.input_CCD_region = ccd_chars.crop_region;
@@ -97,7 +97,7 @@ CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
     MosaicPixelShift CCD_mos_offset =cam_conf.get_mosaic_offset_for_ccd_id(cdi.ccd_id);
     drz_inf.input_mosaic_region = MosaicBoxRegion(CCD_mos_offset+MosaicPosition::origin,
                                   CCD_mos_offset+MosaicPosition::origin);
-    //input_mosaic_region is now a null box at the mosaic Position corresponding to CCD_Position(0,0)
+    //input_mosaic_region is now a null box at the mosaic Position corresponding to CcdPosition(0,0)
 
     drz_inf.input_mosaic_region.low +=
         MosaicPixelShift(ccd_chars.crop_region.low.x ,
@@ -126,7 +126,7 @@ CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
     MosaicPixelShift input_to_output_corner_mos_shift(
         drz_inf.output_mosaic_region.low - drz_inf.input_mosaic_region.low);
 
-    CCD_PixelShift input_to_output_corner_CCD_shift(
+    CcdPixelShift input_to_output_corner_CCD_shift(
         input_to_output_corner_mos_shift.x * ds.drizzle_scale_factor,
         input_to_output_corner_mos_shift.y * ds.drizzle_scale_factor);
 
@@ -165,12 +165,12 @@ CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
     if (!cam_conf.simulated_data) {
         cout<<"Loading column bias frame from:\n "
             <<cdi.most_recently_used_column_bias_frame<<endl;
-        drz_inf.combined_bias_frame = CCDImage<float>(cdi.most_recently_used_column_bias_frame);
+        drz_inf.combined_bias_frame = CcdImage<float>(cdi.most_recently_used_column_bias_frame);
 
         if (ccd_chars.precal_row_bias_frame_available) {
             cout<<"Loading row bias frame from:\n "
                 <<ccd_chars.precal_row_bias_frame_path<<endl;
-            CCDImage<float> row_bias(ccd_chars.precal_row_bias_frame_path);
+            CcdImage<float> row_bias(ccd_chars.precal_row_bias_frame_path);
             drz_inf.combined_bias_frame.pix += row_bias.pix;
         }
     }
@@ -182,9 +182,9 @@ CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
     drz_inf.dark_current_map_available = ccd_chars.dark_current_frames_available;
 
     if (ccd_chars.dark_current_frames_available && ds.normalisation_on) {
-        drz_inf.dark_current_photon_excess=         CCDImage<float>
+        drz_inf.dark_current_photon_excess=         CcdImage<float>
                 (ccd_chars.normalised_DC_frame_path);
-        drz_inf.dark_current_thresholded_excess=    CCDImage<float>
+        drz_inf.dark_current_thresholded_excess=    CcdImage<float>
                 (ccd_chars.thresholded_DC_frame_path);
         cout<<"Loaded dark current calibration frames from:\n "
             <<ccd_chars.normalised_DC_frame_path<<" and\n"
@@ -197,9 +197,9 @@ CCD_specific_drizzle_inf CCD_specific_drizzle_inf::prep_drizzle_info(
 
 //-------------------------------------------------------------------------------------------------------
 
-const CCD_specific_drizzle_inf&
-CCD_specific_drizzle_inf::find_drizzle_info_for_ccd_id(
-    int ccd_id, const vector<CCD_specific_drizzle_inf>& drz_vec)
+const CcdDrizzleData&
+CcdDrizzleData::find_drizzle_info_for_ccd_id(
+    int ccd_id, const vector<CcdDrizzleData>& drz_vec)
 {
     for (size_t i=0; i!=drz_vec.size(); ++i) {
         if (drz_vec[i].CCD_id==ccd_id) { return drz_vec[i]; }
@@ -210,16 +210,16 @@ CCD_specific_drizzle_inf::find_drizzle_info_for_ccd_id(
 
 //-------------------------------------------------------------------------------------------------------
 
-vector<CCD_specific_drizzle_inf>
-CCD_specific_drizzle_inf::prep_drizzle_data_vec(const DrizzleSettings& ds,
-        const vector<CCD_DatasetInfo> & datasets,
+vector<CcdDrizzleData>
+CcdDrizzleData::prep_drizzle_data_vec(const DrizzleSettings& ds,
+        const vector<CcdDatasetInfo> & datasets,
         const CameraConfigInfo& cam_conf,
         const MultiFrame& first_multi_frame,
         const string& drizzle_dir
                                                )
 {
     using namespace string_utils;
-    vector<CCD_specific_drizzle_inf> drz_inf_vec;
+    vector<CcdDrizzleData> drz_inf_vec;
 
     for (size_t i=0; i!=first_multi_frame.synchronized_CCD_frames.size(); ++i) {
         const int ccd_id = first_multi_frame.synchronized_CCD_frames[i].ccd_id;
@@ -228,19 +228,19 @@ CCD_specific_drizzle_inf::prep_drizzle_data_vec(const DrizzleSettings& ds,
 
         //Now need to grab the relevant dataset info for this CCD id.
         //Currently implemented assuming we are only processing one run at a time.
-        vector<CCD_DatasetInfo> datasets_for_this_CCD_id;
+        vector<CcdDatasetInfo> datasets_for_this_CCD_id;
         for (size_t i=0; i!=datasets.size(); ++i) {
             if (datasets[i].ccd_id == ccd_id) {
                 datasets_for_this_CCD_id.push_back(datasets[i]);
             }
         }
         if (datasets_for_this_CCD_id.size()!=1) {
-            throw std::runtime_error("CCD_specific_drizzle_inf::prep_drizzle_data_vec --\n"
+            throw std::runtime_error("CcdDrizzleData::prep_drizzle_data_vec --\n"
                                      "Error - none or more than one datasets with this CCD id");
         }
 
-        CCD_specific_drizzle_inf drz_inf=
-            CCD_specific_drizzle_inf::prep_drizzle_info(datasets_for_this_CCD_id.front(),
+        CcdDrizzleData drz_inf=
+            CcdDrizzleData::prep_drizzle_info(datasets_for_this_CCD_id.front(),
                     ds,
                     cam_conf,
                     drizzle_dir);
@@ -251,8 +251,8 @@ CCD_specific_drizzle_inf::prep_drizzle_data_vec(const DrizzleSettings& ds,
 }
 
 //-------------------------------------------------------------------------------------------------------
-MosaicBoxRegion CCD_specific_drizzle_inf::get_mosaic_region(
-    const vector<CCD_specific_drizzle_inf>& drz_inf_vec)
+MosaicBoxRegion CcdDrizzleData::get_mosaic_region(
+    const vector<CcdDrizzleData>& drz_inf_vec)
 {
     vector<MosaicBoxRegion> frm_output_rgns;
     for (size_t i=0; i!=drz_inf_vec.size(); ++i) {

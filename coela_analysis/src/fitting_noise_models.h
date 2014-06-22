@@ -49,7 +49,7 @@ public:
 //
 //};
 
-} //end namespace coela::psf_fitting
+} //end namespace coela::PsfFitting
 }//end namespace coela
 
 #endif  /* FITTING_NOISE_MODELS_H */

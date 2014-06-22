@@ -24,53 +24,53 @@ namespace psf_models {
 //By specifying a common model for all our PSF model classes, we can use  common PSF image generation code,
 //and common psf fitting code.
 
-class psf_model_interface {
+class PsfModelInterface {
 public:
-    virtual double operator()(const CCD_PixelShift& offset_to_psf_centre) const=0;
-    virtual ~psf_model_interface() {}
+    virtual double operator()(const CcdPixelShift& offset_to_psf_centre) const=0;
+    virtual ~PsfModelInterface() {}
 };
 
 //Converts pixel_offsets into simple radial offsets for axisymmetric models
-class axisymmetric_psf_model_interface: public psf_model_interface {
+class AxisymmetricPsfModelInterface: public PsfModelInterface {
 public:
-    double operator()(const CCD_PixelShift& offset_to_psf_centre) const { return (*this)(offset_to_psf_centre.length()); }
+    double operator()(const CcdPixelShift& offset_to_psf_centre) const { return (*this)(offset_to_psf_centre.length()); }
     virtual double operator()(double radius_in_CCD_pix) const=
         0; //now only need to define the radial function, and it will get wrapped into the Positional call.
-    virtual ~axisymmetric_psf_model_interface() {}
+    virtual ~AxisymmetricPsfModelInterface() {}
 };
 //==================================================================================
 //A few analysis routines
 
 ///Uses a very crude numerical integration routine - may update to something a bit more sophisticated in the future, but it'll do for now.
-double calculate_total_flux(const axisymmetric_psf_model_interface& psf_gen,
+double calculate_total_flux(const AxisymmetricPsfModelInterface& psf_gen,
                             const double step_size_in_CCD_pixels=1.0/50.0,
                             const size_t CCD_pixel_limit = 1e4,
                             const double precision=1e-10
                            );
 
 double calculate_flux_enclosed_at_radius(
-    const axisymmetric_psf_model_interface& psf_gen,
+    const AxisymmetricPsfModelInterface& psf_gen,
     const double radius_in_CCD_pixels,
     const double step_size_in_CCD_pixels=1.0/50.0
 );
 
-double fwhm_in_CCD_pix(const axisymmetric_psf_model_interface& psf_gen,
+double fwhm_in_CCD_pix(const AxisymmetricPsfModelInterface& psf_gen,
                        const double CCD_pixel_width_precision=1e-5);
-double find_first_minima_in_CCD_pix(const axisymmetric_psf_model_interface& psf_gen,
+double find_first_minima_in_CCD_pix(const AxisymmetricPsfModelInterface& psf_gen,
                                     const double CCD_pixel_stepsize=0.01);
 
-double calculate_strehl(const axisymmetric_psf_model_interface& psf_gen,
+double calculate_strehl(const AxisymmetricPsfModelInterface& psf_gen,
                         const double unit_peak_airy_total_flux);
 
 
 
 //==================================================================================
 
-class uniform_psf_model: public axisymmetric_psf_model_interface {
+class UniformPsfModel: public AxisymmetricPsfModelInterface {
 public:
-    uniform_psf_model();
+    UniformPsfModel();
 
-    uniform_psf_model(double peak_value):peak_val(peak_value) {}
+    UniformPsfModel(double peak_value):peak_val(peak_value) {}
 
     double operator()(double /*radius_in_CCD_pix*/) const { return peak_val;}
 
@@ -80,11 +80,11 @@ public:
 
 //==================================================================================
 
-class airy_psf_model: public axisymmetric_psf_model_interface {
+class AiryPsfModel: public AxisymmetricPsfModelInterface {
 public:
-    airy_psf_model();
+    AiryPsfModel();
 
-    airy_psf_model(double peak_value, double rads_per_CCD_pixel,
+    AiryPsfModel(double peak_value, double rads_per_CCD_pixel,
                    double wavelength,
                    double aperture_diameter, double central_obscuration_diameter);
 
@@ -97,10 +97,10 @@ public:
 
 //==================================================================================
 
-class gaussian_psf_model: public axisymmetric_psf_model_interface {
+class GaussianPsfModel: public AxisymmetricPsfModelInterface {
 public:
-    gaussian_psf_model();
-    gaussian_psf_model(double peak_value, double sigma_measured_in_CCD_pixels);
+    GaussianPsfModel();
+    GaussianPsfModel(double peak_value, double sigma_measured_in_CCD_pixels);
 
     double operator()(double radius_in_CCD_pix) const;
 
@@ -119,9 +119,9 @@ private:
 //==================================================================================
 
 ///NB Beware - currently assumes the radial values of the profile points correspond to CCD pixels!
-class empirical_psf_model: public axisymmetric_psf_model_interface {
+class EmpiricalPsfModel: public AxisymmetricPsfModelInterface {
 public:
-    empirical_psf_model(const std::vector<psf_characterisation::detail::psf_profile_point>&);
+    EmpiricalPsfModel(const std::vector<psf_characterisation::detail::psf_profile_point>&);
 
     double operator()(double radius_in_CCD_pix) const; //Returns (interpolated) median profile
 
@@ -132,18 +132,18 @@ private:
     std::vector<psf_characterisation::detail::psf_profile_point> datapoints;
 };
 
-class hybrid_radial_switchover_psf_model: public axisymmetric_psf_model_interface {
+class HybridRadialSwitchoverPsfModel: public AxisymmetricPsfModelInterface {
 public:
-    hybrid_radial_switchover_psf_model(const axisymmetric_psf_model_interface*
+    HybridRadialSwitchoverPsfModel(const AxisymmetricPsfModelInterface*
                                        inner_model_ptr,
-                                       const axisymmetric_psf_model_interface* outer_model_ptr,
+                                       const AxisymmetricPsfModelInterface* outer_model_ptr,
                                        const double switchover_radius,
                                        const double normalization_factor);
     double operator()(double radius_in_CCD_pix) const;
 
 private:
-    const axisymmetric_psf_model_interface * const inner_model_ptr_;
-    const axisymmetric_psf_model_interface * const outer_model_ptr_;
+    const AxisymmetricPsfModelInterface * const inner_model_ptr_;
+    const AxisymmetricPsfModelInterface * const outer_model_ptr_;
     const double switchover_radius_;
     const double normalization_factor_;
 };

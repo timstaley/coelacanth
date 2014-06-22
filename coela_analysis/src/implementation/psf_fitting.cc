@@ -1,5 +1,5 @@
 /*
- * File:   psf_fitting.cc
+ * File:   PsfFitting.cc
  * Author: ts337
  *
  * Created on 13 May 2011, 16:34
@@ -18,9 +18,9 @@ namespace coela {
 namespace psf_fitting {
 
 //==================================================================================
-analytic_psf_fit_cost_fcn::analytic_psf_fit_cost_fcn(const CCDImage<double>& data,
-        const CCDImage<double>& fitting_mask,
-        const Mn2_models::minuit_model_interface& model,
+AnalyticPsfFitCostFCN::AnalyticPsfFitCostFCN(const CcdImage<double>& data,
+        const CcdImage<double>& fitting_mask,
+        const Mn2_models::MinuitModelInterface& model,
         const variance_estimation_base& noise_model,
         const int desired_oversampling_level)
     : input_img_ref(data), mask(fitting_mask),
@@ -29,11 +29,11 @@ analytic_psf_fit_cost_fcn::analytic_psf_fit_cost_fcn(const CCDImage<double>& dat
 {}
 
 //------------------------------------------------------------------------------------------
-double analytic_psf_fit_cost_fcn::operator()(
+double AnalyticPsfFitCostFCN::operator()(
     const std::vector<double>& model_pars) const
 {
 
-    CCDImage<double> model_img = generate_model_image(model_pars);
+    CcdImage<double> model_img = generate_model_image(model_pars);
 
     return reduced_chi_squared(input_img_ref, mask,
                                model_img,
@@ -41,14 +41,14 @@ double analytic_psf_fit_cost_fcn::operator()(
                                model_pars.size());
 }
 //------------------------------------------------------------------------------------------
-CCDImage<double> analytic_psf_fit_cost_fcn::generate_model_image(
+CcdImage<double> AnalyticPsfFitCostFCN::generate_model_image(
     const std::vector<double>& fitting_pars) const
 {
     assert(fitting_pars.size()>=2);
 
-    CCD_Position estimated_psf_centre(fitting_pars[0], fitting_pars[1]);
+    CcdPosition estimated_psf_centre(fitting_pars[0], fitting_pars[1]);
     vector<double> model_pars(fitting_pars.begin()+2, fitting_pars.end());
-    Mn2_models::model_params_wrapper bound_model(psf_model, model_pars);
+    Mn2_models::ModelParamsWrapper bound_model(psf_model, model_pars);
 
     return psf_models::generate_psf(bound_model, mask.pix.range(),
                                     mask.CCD_grid.image_outline_.low,
@@ -58,9 +58,9 @@ CCDImage<double> analytic_psf_fit_cost_fcn::generate_model_image(
 
 }
 //==================================================================================
-double reduced_chi_squared(const CCDImage<double>& input,
-                           const CCDImage<double>& input_mask,
-                           const CCDImage<double>& fitting_model,
+double reduced_chi_squared(const CcdImage<double>& input,
+                           const CcdImage<double>& input_mask,
+                           const CcdImage<double>& fitting_model,
                            const variance_estimation_base& noise_estimator,
                            const int num_fitted_parameters)
 {
@@ -70,7 +70,7 @@ double reduced_chi_squared(const CCDImage<double>& input,
            fitting_model.CCD_grid.pixel_width_);
 
     //NB Such verbosity *is* necessary if we are dealing with unknown zoom and offset levels
-    CCD_Position input_mask_low_pixel_centre =
+    CcdPosition input_mask_low_pixel_centre =
         input_mask.CCD_grid.corresponding_grid_Position(
             PixelPosition::centre_of_pixel(PixelIndex(1,1))
         );
@@ -100,6 +100,6 @@ double reduced_chi_squared(const CCDImage<double>& input,
 }
 
 
-} //end namespace coela::psf_fitting
+} //end namespace coela::PsfFitting
 }//end namespace coela
 

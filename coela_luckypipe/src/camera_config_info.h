@@ -19,26 +19,26 @@ using std::vector;
 namespace coela {
 
 //============================================================================================================
-struct CCD_calibration_info {
+struct CcdCalibrationInfo {
 
     //Constructors
-    CCD_calibration_info():
+    CcdCalibrationInfo():
         precal_row_bias_frame_available(false), dark_current_frames_available(false),
         precal_row_bias_frame_path("none"), normalised_DC_frame_path("none"),
         thresholded_DC_frame_path("none"),
         milliseconds_per_frame_exposure(0) {}
 
-    static vector<CCD_calibration_info> load_from_text_vec(const vector<string>&);
+    static vector<CcdCalibrationInfo> load_from_text_vec(const vector<string>&);
     friend std::ostream& operator<<(std::ostream& os,
-                                    const vector<CCD_calibration_info>& ccd_prop);
+                                    const vector<CcdCalibrationInfo>& ccd_prop);
     //-------------------------------------------------------
     //data members:
     int ccd_id;
     vector<size_t> bad_columns;
     PixelRange cropped_PixelRange;
-    CCD_BoxRegion crop_region;
+    CcdBoxRegion crop_region;
 
-    CCD_BoxRegion default_temporal_debiasing_histogram_region;
+    CcdBoxRegion default_temporal_debiasing_histogram_region;
 
     bool precal_row_bias_frame_available, dark_current_frames_available;
     string precal_row_bias_frame_path;
@@ -49,7 +49,7 @@ struct CCD_calibration_info {
 
     //Member functions
     //NB ignores anything outside the crop_region since that is all assumed to be rubbish anyway
-    vector<CCD_BoxRegion> get_bad_detector_regions() const;
+    vector<CcdBoxRegion> get_bad_detector_regions() const;
 };
 
 //============================================================================================================
@@ -61,9 +61,9 @@ struct CCD_calibration_info {
 //    MosaicPixelShift mosaic_offset_for_CCD_origin;
 //};
 
-struct lens_and_aperture_info {
+struct LensAndApertureInfo {
     void load_from_text_vec(const vector<string>& file_text);
-    friend std::ostream& operator<<(std::ostream& os, const lens_and_aperture_info& lens_inf);
+    friend std::ostream& operator<<(std::ostream& os, const LensAndApertureInfo& lens_inf);
 
     //-------------------------------------------------------
     //data
@@ -104,8 +104,8 @@ public:
                         std::string filter_inf_rel_path=string());
 
 
-    CCD_calibration_info& get_calibration_info_for_CCD_id(int ccd_id);
-    const CCD_calibration_info& get_calibration_info_for_CCD_id(int ccd_id) const;
+    CcdCalibrationInfo& get_calibration_info_for_CCD_id(int ccd_id);
+    const CcdCalibrationInfo& get_calibration_info_for_CCD_id(int ccd_id) const;
 
     OpticalFilterInfo& get_filter_info_for_ccd_id(int ccd_id);
     const OpticalFilterInfo& get_filter_info_for_ccd_id(int ccd_id) const;
@@ -118,8 +118,8 @@ public:
     std::string self_path; ///< Used for calculating paths of subfiles for ccd,lens,filter...
 
     vector<OpticalFilterInfo> filters;
-    vector<CCD_calibration_info> CCD_vec;
-    lens_and_aperture_info lens_inf;
+    vector<CcdCalibrationInfo> CCD_vec;
+    LensAndApertureInfo lens_inf;
     //-------------------------------------------------------
 
 private:

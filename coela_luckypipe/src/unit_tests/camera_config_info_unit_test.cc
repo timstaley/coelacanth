@@ -23,14 +23,14 @@ SUITE(CameraConfigInfo)
     TEST(file_save_and_load) {
         CameraConfigInfo cci;
 
-        CCD_calibration_info ccd_props;
+        CcdCalibrationInfo ccd_props;
         ccd_props.ccd_id=0;
         ccd_props.precal_row_bias_frame_available=false;
         ccd_props.precal_row_bias_frame_path="none";
         ccd_props.cropped_PixelRange = PixelRange(10,10,500,500);
-        ccd_props.crop_region = CCD_BoxRegion(9.0,9.0,500,500);
+        ccd_props.crop_region = CcdBoxRegion(9.0,9.0,500,500);
         ccd_props.default_temporal_debiasing_histogram_region =
-            CCD_BoxRegion(250,250,500,500);
+            CcdBoxRegion(250,250,500,500);
         ccd_props.dark_current_frames_available=false;
         ccd_props.normalised_DC_frame_path="none";
         ccd_props.thresholded_DC_frame_path="none";

@@ -5,7 +5,7 @@
 #include "coela_core/src/ds9_region.h"
 #include "coela_core/src/cartesian_coords.h"
 #include "coela_utility/src/simple_serialization.h"
-//#include "../level2/file_info.h"
+//#include "../level2/FileInfo.h"
 //#include "../level1/ds9_interface.h"
 #include <boost/filesystem.hpp>
 #include <ctime>
@@ -33,7 +33,7 @@ using std::ifstream; using std::ostream;
 
 //============================================================================================================
 std::ostream& operator<<(std::ostream& os,
-                         const vector<CCD_calibration_info>& ccd_chars_vec)
+                         const vector<CcdCalibrationInfo>& ccd_chars_vec)
 {
     os<<"#CCD characteristics information file:\n";
     os<<"#Version 1.1\n\n";
@@ -45,7 +45,7 @@ std::ostream& operator<<(std::ostream& os,
     os<<"\n\n";
 
     for (size_t i=0; i!=ccd_chars_vec.size(); ++i) {
-        const CCD_calibration_info& ccd_chars=ccd_chars_vec[i];
+        const CcdCalibrationInfo& ccd_chars=ccd_chars_vec[i];
 
         os << "Bad cols for CCD_ID " <<ccd_chars.ccd_id<<": \t";
         for (size_t i=0; i!=ccd_chars.bad_columns.size(); ++i) { os << ccd_chars.bad_columns[i]<<","; }
@@ -74,17 +74,17 @@ std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-vector<CCD_calibration_info> CCD_calibration_info::load_from_text_vec(
+vector<CcdCalibrationInfo> CcdCalibrationInfo::load_from_text_vec(
     const vector<string>& file_text)
 {
     using namespace string_utils;
-    vector<CCD_calibration_info> ccd_vec;
+    vector<CcdCalibrationInfo> ccd_vec;
 
     vector<string> ccd_id_strs=tokenize(parse_for_key_value(file_text,
                                         "Info present for CCD IDs"), ",");
     for (size_t i=0; i!=ccd_id_strs.size(); ++i) {
 
-        CCD_calibration_info ccd_props;
+        CcdCalibrationInfo ccd_props;
         ccd_props.ccd_id=atoi(ccd_id_strs[i]);
 
         ccd_props.precal_row_bias_frame_available = string_to_bool(parse_for_key_value(file_text,
@@ -119,7 +119,7 @@ vector<CCD_calibration_info> CCD_calibration_info::load_from_text_vec(
 
 
         ccd_props.crop_region =
-            CCD_BoxRegion(ccd_props.cropped_PixelRange.low.x-1, ccd_props.cropped_PixelRange.low.y-1,
+            CcdBoxRegion(ccd_props.cropped_PixelRange.low.x-1, ccd_props.cropped_PixelRange.low.y-1,
                           ccd_props.cropped_PixelRange.high.x,ccd_props.cropped_PixelRange.high.y);
 
         ccd_vec.push_back(ccd_props);
@@ -127,11 +127,11 @@ vector<CCD_calibration_info> CCD_calibration_info::load_from_text_vec(
     return ccd_vec;
 }
 
-vector<CCD_BoxRegion> CCD_calibration_info::get_bad_detector_regions() const
+vector<CcdBoxRegion> CcdCalibrationInfo::get_bad_detector_regions() const
 {
-    vector<CCD_BoxRegion> bad_regions;
+    vector<CcdBoxRegion> bad_regions;
     for (size_t i=0; i!=bad_columns.size(); ++i) {
-        bad_regions.push_back(CCD_BoxRegion(bad_columns[i]-1.0,cropped_PixelRange.low.y-1.0,
+        bad_regions.push_back(CcdBoxRegion(bad_columns[i]-1.0,cropped_PixelRange.low.y-1.0,
                                             bad_columns[i], cropped_PixelRange.high.y));
     }
     return bad_regions;
@@ -140,7 +140,7 @@ vector<CCD_BoxRegion> CCD_calibration_info::get_bad_detector_regions() const
 //============================================================================================================
 
 
-std::ostream& operator<<(std::ostream& os, const lens_and_aperture_info& lens_inf)
+std::ostream& operator<<(std::ostream& os, const LensAndApertureInfo& lens_inf)
 {
     os<<"#Lens and aperture information file \n";
     os<<"#Version 1.0\n\n";
@@ -155,7 +155,7 @@ std::ostream& operator<<(std::ostream& os, const lens_and_aperture_info& lens_in
     return os;
 }
 
-void lens_and_aperture_info::load_from_text_vec(const vector<string>& file_text)
+void LensAndApertureInfo::load_from_text_vec(const vector<string>& file_text)
 {
     telescope_outer_diameter = atof(parse_for_key_value(file_text,
                                     "Telescope outer diameter"));
@@ -293,7 +293,7 @@ void CameraConfigInfo::load_from_text_vec(const vector<string>& file_text)
     bfs::path lens_inf_abs_path = bfs::absolute(lens_inf_relpath, camconf_root);
     bfs::path filter_inf_abs_path = bfs::absolute(filter_inf_relpath, camconf_root);
 
-    CCD_vec = CCD_calibration_info::load_from_text_vec(
+    CCD_vec = CcdCalibrationInfo::load_from_text_vec(
                   file_utils::convert_text_file_to_string_vec(CCD_inf_abs_path.string()));
     lens_inf.load_from_text_vec(
         file_utils::convert_text_file_to_string_vec(lens_inf_abs_path.string()));
@@ -310,7 +310,7 @@ CameraConfigInfo::CameraConfigInfo(const string& filename)
 }
 
 
-CCD_calibration_info& CameraConfigInfo::get_calibration_info_for_CCD_id(int ccd_id)
+CcdCalibrationInfo& CameraConfigInfo::get_calibration_info_for_CCD_id(int ccd_id)
 {
     for (size_t i=0; i!=CCD_vec.size(); ++i) {
         if (CCD_vec[i].ccd_id==ccd_id) { return CCD_vec[i]; }
@@ -319,7 +319,7 @@ CCD_calibration_info& CameraConfigInfo::get_calibration_info_for_CCD_id(int ccd_
                         "Cannot find CCD info for this id: "+itoa(ccd_id));
 }
 
-const CCD_calibration_info& CameraConfigInfo::get_calibration_info_for_CCD_id(
+const CcdCalibrationInfo& CameraConfigInfo::get_calibration_info_for_CCD_id(
     int ccd_id) const
 {
     for (size_t i=0; i!=CCD_vec.size(); ++i) {

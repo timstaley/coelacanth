@@ -40,7 +40,7 @@ SUITE(Clean_And_Register_Subroutines)
         double resample_factor=4;
 
 
-        psf_models::reference_psf kernel =
+        psf_models::ReferencePsf kernel =
             clean_and_register_subroutines::generate_airy_core_template(
                 camconf,
                 0,
@@ -79,7 +79,7 @@ SUITE(Clean_And_Register_Subroutines)
 
     TEST_FIXTURE(camconf_fixture, custom_template) {
         double resample_factor=4;
-        psf_models::reference_psf kernel =
+        psf_models::ReferencePsf kernel =
             clean_and_register_subroutines::generate_normalised_core_template(
                 camconf,
                 0,

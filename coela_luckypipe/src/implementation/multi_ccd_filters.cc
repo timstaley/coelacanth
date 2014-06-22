@@ -23,26 +23,26 @@ namespace multi_CCD_filters {
 const int threaded_drizzle_debug=0;
 
 //=======================================================================================
-void drizzle_token::clear()
+void DrizzleToken::clear()
 {
-    single_CCD_filters::frame_cleanup_token::clear();
-    atmospheric_translation_shift=CCD_PixelShift();
+    single_CCD_filters::FrameCleanupToken::clear();
+    atmospheric_translation_shift=CcdPixelShift();
 }
 
-vector<drizzle_token> drizzle_token::initialize_token_vec(const size_t n_tokens)
+vector<DrizzleToken> DrizzleToken::initialize_token_vec(const size_t n_tokens)
 {
-    vector< drizzle_token> v(n_tokens);
+    vector< DrizzleToken> v(n_tokens);
     for (size_t i=0; i!=v.size(); ++i) {
         v[i].token_buffer_id=i;
     }
     return v;
 }
 //=======================================================================================
-Quality_Selected_Load_to_Buffer_Filter::Quality_Selected_Load_to_Buffer_Filter(
+SelectiveLoadToBufferFilter::SelectiveLoadToBufferFilter(
     const vector<FrameInfo>& GS_frame_list_,
     const vector<MultiFrame>& multi_frames_list,
-    const vector<CCD_specific_drizzle_inf>& drz_inf_vec_,
-    const CCD_Position& GS_target_Position):
+    const vector<CcdDrizzleData>& drz_inf_vec_,
+    const CcdPosition& GS_target_Position):
     tbb::filter(serial_in_order),
     GS_frame_vec(GS_frame_list_),
     multi_frames_vec(multi_frames_list.begin(), multi_frames_list.end()),
@@ -54,19 +54,19 @@ Quality_Selected_Load_to_Buffer_Filter::Quality_Selected_Load_to_Buffer_Filter(
     CCDs_loaded_for_current_exposure(0),
     current_exposure_frames(-1)
 {
-    token_buffers=drizzle_token::initialize_token_vec(single_CCD_filters::lucky_n_tokens);
+    token_buffers=DrizzleToken::initialize_token_vec(single_CCD_filters::lucky_n_tokens);
     assert(GS_frame_vec.front().quality_percentile_rank!=0.0);
     low_selection_limit=upper_selection_limit=0;
 }
 
-void Quality_Selected_Load_to_Buffer_Filter::reset()
+void SelectiveLoadToBufferFilter::reset()
 {
     current_list_Position=GS_frame_vec.begin();
     next_buffer=0;
 }
 
 
-void Quality_Selected_Load_to_Buffer_Filter::set_selection_limits(double low_limit,
+void SelectiveLoadToBufferFilter::set_selection_limits(double low_limit,
         double high_limit)
 {
     low_selection_limit=low_limit;
@@ -74,12 +74,12 @@ void Quality_Selected_Load_to_Buffer_Filter::set_selection_limits(double low_lim
     reset();
 }
 
-void* Quality_Selected_Load_to_Buffer_Filter::operator()(void*)
+void* SelectiveLoadToBufferFilter::operator()(void*)
 {
     if (threaded_drizzle_debug) { cerr<<"In load buffer "<<endl; }
 //            cout <<"Selection limits: " <<low_selection_limit<<" , "<<upper_selection_limit<<endl;
     if (low_selection_limit==upper_selection_limit) { throw logic_error("limits not set"); }
-    drizzle_token& d = token_buffers[next_buffer];
+    DrizzleToken& d = token_buffers[next_buffer];
 //            d.clear();//called by decommission filter
     next_buffer= (next_buffer+1) % single_CCD_filters::lucky_n_tokens;
 
@@ -101,7 +101,7 @@ void* Quality_Selected_Load_to_Buffer_Filter::operator()(void*)
         current_exposure_frames.synchronized_CCD_frames[CCDs_loaded_for_current_exposure];
 
     d.atmospheric_translation_shift =
-        CCD_PixelShift(GS_tgt_CCD_posn -
+        CcdPixelShift(GS_tgt_CCD_posn -
                        current_list_Position->guide_star_estimates.front().Position);
 
     string file_extension = string_utils::pull_extension(d.frame_inf.file_path);
@@ -119,7 +119,7 @@ void* Quality_Selected_Load_to_Buffer_Filter::operator()(void*)
         //FIXME: This has gotten to the stage of copying several bitmaps!
         //Would be more computationally efficient (although larger memory footprint) to give each token a full copy of the drz_inf_vec
         //Then just switch an index for each frame processed.
-        d.drizzle_inf= CCD_specific_drizzle_inf::find_drizzle_info_for_ccd_id(d.frame_inf.ccd_id,
+        d.drizzle_inf= CcdDrizzleData::find_drizzle_info_for_ccd_id(d.frame_inf.ccd_id,
                        drz_inf_vec);
     }
     d.drizzle_input_weights = d.drizzle_inf.default_frame_weights;
@@ -139,13 +139,13 @@ void* Quality_Selected_Load_to_Buffer_Filter::operator()(void*)
 
 //=======================================================================================
 
-void* Drizzle_Token_Crop_and_Debias_Filter::operator()(void* item)
+void* MultiframeCropDebiasFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In debias filter..."; }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
 
     //FrameCropFilter
-    d.img=CCDImage<float>::sub_image(d.img, d.drizzle_inf.raw_data_crop_box);
+    d.img=CcdImage<float>::sub_image(d.img, d.drizzle_inf.raw_data_crop_box);
 
     assert(d.img.CCD_grid.image_outline_==d.drizzle_input_weights.CCD_grid.image_outline_);
 
@@ -160,19 +160,19 @@ void* Drizzle_Token_Crop_and_Debias_Filter::operator()(void* item)
 
 //=======================================================================================
 
-void* normalization_filter::operator()(void* item)
+void* NormalizationFilter::operator()(void* item)
 {
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
     gain_utils::normalise_CCD_with_uniform_gain(d.img, d.drizzle_inf.gain_inf);
     return &d;
 }
 
 //=======================================================================================
 
-void* Photon_Thresholding_Filter::operator()(void* item)
+void* PhotonThresholdingFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In thresholding filter"<<endl; }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
 
     d.thresholded_input = gain_utils::threshold_bitmap(d.img,
                           threshold_in_photo_e_);
@@ -181,10 +181,10 @@ void* Photon_Thresholding_Filter::operator()(void* item)
     return &d;
 }
 //=======================================================================================
-void* Dark_Current_Subtraction_Filter::operator()(void* item)
+void* DarkCurrentSubtractionFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In DC subtraction filter"<<endl; }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
     if (d.drizzle_inf.dark_current_map_available) {
         d.img.pix-=d.drizzle_inf.dark_current_photon_excess.pix;
         if (thresholding) { d.thresholded_input.pix -= d.drizzle_inf.dark_current_thresholded_excess.pix; }
@@ -193,9 +193,9 @@ void* Dark_Current_Subtraction_Filter::operator()(void* item)
 }
 
 //=======================================================================================
-void* Cosmic_Ray_Downweighting_Filter::operator()(void* item)
+void* CosmicRayDownweightingFilter::operator()(void* item)
 {
-    drizzle_token& dt = *static_cast<drizzle_token*>(item);
+    DrizzleToken& dt = *static_cast<DrizzleToken*>(item);
 
     if (!dt.frame_inf.confirmed_cosmic_rays.empty()) {
         for (size_t i=0; i!=dt.frame_inf.confirmed_cosmic_rays.size(); ++i) {
@@ -216,10 +216,10 @@ void* Cosmic_Ray_Downweighting_Filter::operator()(void* item)
     return &dt;
 }
 //=======================================================================================
-void* drizzle_filter::operator()(void* item)
+void* DrizzleFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In drizzle filter... "; }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
 
 
     d.img.initialize_mosaic_grid_to_specific_region(
@@ -249,7 +249,7 @@ void* drizzle_filter::operator()(void* item)
 
     if (thresholding_on) {
 //        assert(d.thresholded_input.key_exists("THRESHED"));
-        d.thresholded_drizzle_result_vals=CCDImage<float>(d.drizzle_result_vals);
+        d.thresholded_drizzle_result_vals=CcdImage<float>(d.drizzle_result_vals);
 //        d.thresholded_drizzle_results.set_keyword("THRESHED", d.thresholded_input.get_key_value("THRESHED"));
 
         drizzle::dual_translate_and_drizzle_frame(d.img.pix, d.thresholded_input.pix,
@@ -269,8 +269,8 @@ void* drizzle_filter::operator()(void* item)
 }
 //=======================================================================================
 
-raw_data_mosaic_filter::raw_data_mosaic_filter(
-    const vector<CCD_specific_drizzle_inf>& drz_inf_vec,
+RawDataMosaicFilter::RawDataMosaicFilter(
+    const vector<CcdDrizzleData>& drz_inf_vec,
     const string& output_folder_,
     const MosaicBoxRegion& full_output_region)
     :filter(serial_in_order),
@@ -291,14 +291,14 @@ raw_data_mosaic_filter::raw_data_mosaic_filter(
     raw_mosaic_weights = raw_mosaic_vals;
 }
 
-void* raw_data_mosaic_filter::operator()(void* item)
+void* RawDataMosaicFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In raw mosaic filter"; }
     if (!output_folder_created) {
         boost::filesystem::create_directories(output_folder);
         output_folder_created=true;
     }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
 
     //drizzle
     d.img.initialize_mosaic_grid_to_specific_region(d.drizzle_inf.input_mosaic_region);
@@ -357,14 +357,14 @@ void* raw_data_mosaic_filter::operator()(void* item)
 }
 
 //=======================================================================================
-output_summation_filter::output_summation_filter(const vector<CCD_specific_drizzle_inf>&
+OutputSummationFilter::OutputSummationFilter(const vector<CcdDrizzleData>&
         drz_inf_vec, const bool thresholding_on_):
     filter(serial_in_order), thresholding_on(thresholding_on_)
 {
 
     for (size_t i=0; i!=drz_inf_vec.size(); ++i) {
         index[drz_inf_vec[i].CCD_id] = i ;
-        CCD_specific_drizzle_inf drz_inf = drz_inf_vec[i];
+        CcdDrizzleData drz_inf = drz_inf_vec[i];
         MosaicImage<double> output_img;
         output_img.pix = PixelArray2d<double>(drz_inf.drizzled_output_PixelRange.x_dim(),
                                               drz_inf.drizzled_output_PixelRange.y_dim(), 0.0);
@@ -381,7 +381,7 @@ output_summation_filter::output_summation_filter(const vector<CCD_specific_drizz
 
 }
 
-void output_summation_filter::reset()
+void OutputSummationFilter::reset()
 {
     for (size_t i=0; i!=summed_CCD_drizzle_val_imgs.size(); ++i) {
         summed_CCD_drizzle_val_imgs[i].pix.assign(0.0);
@@ -390,22 +390,22 @@ void output_summation_filter::reset()
     }
 }
 
-bool output_summation_filter::ccd_id_valid(const int ccd_id) const
+bool OutputSummationFilter::ccd_id_valid(const int ccd_id) const
 {
 //            if (ccd_id>=(int)index_vec.size() || index_vec[ccd_id]==-1) return false; else return true;
     return index.find(ccd_id)!=index.end();
 }
 
-size_t output_summation_filter::get_vec_Position_for_ccd_id(const int ccd_id) const
+size_t OutputSummationFilter::get_vec_Position_for_ccd_id(const int ccd_id) const
 {
     assert(ccd_id_valid(ccd_id));
     return (index.find(ccd_id))->second;
 }
 
-void* output_summation_filter::operator()(void* item)
+void* OutputSummationFilter::operator()(void* item)
 {
     if (threaded_drizzle_debug) { cerr<<"In output sum filter"<<endl; }
-    drizzle_token& d = *static_cast<drizzle_token*>(item);
+    DrizzleToken& d = *static_cast<DrizzleToken*>(item);
 
     size_t vec_pos = get_vec_Position_for_ccd_id(d.frame_inf.ccd_id);
 
@@ -415,7 +415,7 @@ void* output_summation_filter::operator()(void* item)
     return &d;
 }
 
-CCDImage<double> output_summation_filter::drizzled_vals_for_CCD(const int ccd_id)
+CcdImage<double> OutputSummationFilter::drizzled_vals_for_CCD(const int ccd_id)
 {
     if (!ccd_id_valid(ccd_id)) {
         throw logic_error("This ccd not stored by summation filter: "+string_utils::itoa(
@@ -424,7 +424,7 @@ CCDImage<double> output_summation_filter::drizzled_vals_for_CCD(const int ccd_id
     return summed_CCD_drizzle_val_imgs[get_vec_Position_for_ccd_id(ccd_id)];
 }
 
-CCDImage<double> output_summation_filter::drizzled_threshed_vals_for_CCD(const int ccd_id)
+CcdImage<double> OutputSummationFilter::drizzled_threshed_vals_for_CCD(const int ccd_id)
 {
     if (!ccd_id_valid(ccd_id)) {
         throw logic_error("This ccd not stored by summation filter: "+string_utils::itoa(
@@ -433,7 +433,7 @@ CCDImage<double> output_summation_filter::drizzled_threshed_vals_for_CCD(const i
     return summed_threshed_vals[get_vec_Position_for_ccd_id(ccd_id)];
 }
 
-CCDImage<double> output_summation_filter::drizzled_weights_for_CCD(const int ccd_id)
+CcdImage<double> OutputSummationFilter::drizzled_weights_for_CCD(const int ccd_id)
 {
     if (!ccd_id_valid(ccd_id)) {
         throw logic_error("This ccd not stored by summation filter: "+string_utils::itoa(

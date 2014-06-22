@@ -43,5 +43,5 @@ namespace psf_fitting {
 //}
 
 
-} //end namespace coela::psf_fitting
+} //end namespace coela::PsfFitting
 }//end namespace coela

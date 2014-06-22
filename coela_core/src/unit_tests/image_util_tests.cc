@@ -21,7 +21,7 @@ SUITE(image_utils)
 
 
     TEST(bin_image) {
-        CCDImage<double> input_image;
+        CcdImage<double> input_image;
         input_image.pix = PixelArray2d<double>(42,42, 0.0);
 
         input_image.pix(1,1)=5;
@@ -34,10 +34,10 @@ SUITE(image_utils)
 
         input_image.initialize_CCD_grid_for_raw_data();
 
-        CCDImage<double> bin_1x = image_utils::bin_image(input_image, 1);
-        CCDImage<double> bin_2x = image_utils::bin_image(input_image, 2);
-        CCDImage<double> bin_3x = image_utils::bin_image(input_image, 3);
-        CCDImage<double> bin_42x = image_utils::bin_image(input_image, 42);
+        CcdImage<double> bin_1x = image_utils::bin_image(input_image, 1);
+        CcdImage<double> bin_2x = image_utils::bin_image(input_image, 2);
+        CcdImage<double> bin_3x = image_utils::bin_image(input_image, 3);
+        CcdImage<double> bin_42x = image_utils::bin_image(input_image, 42);
 
         CHECK(bin_1x.pix==input_image.pix);
 //        CHECK(bin_1x==input_image);
@@ -58,7 +58,7 @@ SUITE(image_utils)
     }
 
     TEST(resample_image) {
-        CCDImage<double> input_image;
+        CcdImage<double> input_image;
         input_image.pix = PixelArray2d<double>(40,40, 0.0);
         input_image.initialize_CCD_grid_for_raw_data();
 
@@ -67,22 +67,22 @@ SUITE(image_utils)
         input_image.pix(21,20)=5;
         input_image.pix(21,21)=5;
 
-        CCDImage<double> downsample4x = image_utils::bin_image(input_image, 4);
-        CCDImage<double> downsample2x = image_utils::bin_image(input_image, 2);
+        CcdImage<double> downsample4x = image_utils::bin_image(input_image, 4);
+        CcdImage<double> downsample2x = image_utils::bin_image(input_image, 2);
 
 
-        CCDImage<double> interp4x = image_utils::bicubic_resample_4x(downsample4x);
-        CCDImage<double> interp2x = image_utils::bicubic_resample_2x(downsample2x);
+        CcdImage<double> interp4x = image_utils::bicubic_resample_4x(downsample4x);
+        CcdImage<double> interp2x = image_utils::bicubic_resample_2x(downsample2x);
 
         CHECK_EQUAL(input_image.pix.sum(), interp2x.pix.sum());
         CHECK_EQUAL(input_image.pix.sum(), interp4x.pix.sum());
 
-        CCD_Position orig_centroid = input_image.CCD_grid.corresponding_grid_Position(
+        CcdPosition orig_centroid = input_image.CCD_grid.corresponding_grid_Position(
                                          pixel_array_routines::centroid(
                                              input_image.pix, input_image.pix.range())
                                      );
 
-        CCD_Position centroid_4x = interp4x.CCD_grid.corresponding_grid_Position(
+        CcdPosition centroid_4x = interp4x.CCD_grid.corresponding_grid_Position(
                                        pixel_array_routines::centroid(interp4x.pix, interp4x.pix.range())
                                    );
 

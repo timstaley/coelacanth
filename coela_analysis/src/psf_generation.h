@@ -20,11 +20,11 @@ namespace coela {
 namespace psf_models {
 
 //==================================================================================
-struct reference_psf {
-    CCDImage<double> psf_image;
+struct ReferencePsf {
+    CcdImage<double> psf_image;
     PixelIndex central_pixel;
     PixelPosition exact_centre;
-    CCDImage<double> mask;
+    CcdImage<double> mask;
 
     void apply_mask() {psf_image.pix *= mask.pix;}
 //    void set_mask_as_aperture(const PixelPosition& aperture_centre, const double radius_in_frame_pixels);
@@ -36,10 +36,10 @@ struct reference_psf {
 /// -(thereby performing crude integration of the continuous func. to get more accurate pixel values)
 //FIXME to use gen_psf_with_params....
 
-reference_psf generate_psf(const psf_model_interface&,
+ReferencePsf generate_psf(const PsfModelInterface&,
                            const PixelRange& output_frame_shape,
-                           const CCD_Position& output_CCD_region_low_corner,
-                           const CCD_Position& centre_point,
+                           const CcdPosition& output_CCD_region_low_corner,
+                           const CcdPosition& centre_point,
                            const double desired_pixel_scale_relative_to_CCD_pix,
                            const double construction_oversampling_factor,
                            const bool radius_limited=false,
@@ -48,7 +48,7 @@ reference_psf generate_psf(const psf_model_interface&,
 
 //==================================================================================
 
-reference_psf generate_centred_psf(const axisymmetric_psf_model_interface& psf_func,
+ReferencePsf generate_centred_psf(const AxisymmetricPsfModelInterface& psf_func,
                                    const double outer_radius_in_CCD_pix,
                                    const double desired_pixel_scale_relative_to_CCD_pix,
                                    const int oversampling_factor

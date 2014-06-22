@@ -33,7 +33,7 @@
 namespace coela {
 namespace clean_and_register_subroutines {
 
-CCDImage<float> estimate_column_bias_pattern(
+CcdImage<float> estimate_column_bias_pattern(
     const vector<FrameInfo>& frms,
     const std::string& output_dir,
     const PixelRange& crop_box,
@@ -42,19 +42,19 @@ CCDImage<float> estimate_column_bias_pattern(
     const size_t n_frames,
     const size_t n_threads);
 
-CCDImage<float> estimate_row_bias_pattern(
+CcdImage<float> estimate_row_bias_pattern(
     const vector<FrameInfo>& frms,
     const std::string& output_dir,
     const PixelRange& crop_box,
-    const CCDImage<float>& col_bias_pattern,
+    const CcdImage<float>& col_bias_pattern,
     const size_t n_frames,
     const size_t n_threads);
 
-CCDImage<double> create_debiased_average(
+CcdImage<double> create_debiased_average(
     const vector<FrameInfo>& frms,
     const PixelRange& crop_box,
-    const CCD_BoxRegion crop_region,
-    const CCDImage<float>& bias_frame,
+    const CcdBoxRegion crop_region,
+    const CcdImage<float>& bias_frame,
     const size_t n_frames,
     const size_t n_threads);
 
@@ -63,13 +63,13 @@ std::vector< std::pair<int, double> > estimate_per_column_EM_gain(
     const std::string& output_dir,
 //    const bool use_full_fit,
     const PixelRange& crop_box,
-//    const CCD_BoxRegion crop_region,
-    const CCDImage<float>& bias_frame,
+//    const CcdBoxRegion crop_region,
+    const CcdImage<float>& bias_frame,
     const size_t n_frames,
     const size_t n_threads);
 
 //===================================================================================
-psf_models::reference_psf generate_airy_core_template(
+psf_models::ReferencePsf generate_airy_core_template(
     const CameraConfigInfo& camconf,
     const int ccd_id,
     const double desired_pixel_scale_relative_to_CCD,
@@ -77,7 +77,7 @@ psf_models::reference_psf generate_airy_core_template(
 );
 
 
-psf_models::reference_psf generate_normalised_core_template(
+psf_models::ReferencePsf generate_normalised_core_template(
     const CameraConfigInfo& camconf,
     const int ccd_id,
     const double desired_pixel_scale_relative_to_CCD

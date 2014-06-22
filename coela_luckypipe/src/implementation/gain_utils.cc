@@ -24,7 +24,7 @@ namespace coela {
 namespace gain_utils {
 //=====================================================================================================================
 
-void append_histogram_data_from_float_bitmap_region(const CCDImage<float>& bmp,
+void append_histogram_data_from_float_bitmap_region(const CcdImage<float>& bmp,
         const PixelRange& rgn, HistogramContainer14bit& hist)
 {
     assert(hist.minimum_has_been_set());
@@ -37,7 +37,7 @@ void append_histogram_data_from_float_bitmap_region(const CCDImage<float>& bmp,
     return;
 }
 
-void append_histogram_data_from_float_bitmap_region(const CCDImage<float>& bmp,
+void append_histogram_data_from_float_bitmap_region(const CcdImage<float>& bmp,
         const PixelRange& rgn, HistogramContainer10bit& hist)
 {
     assert(hist.minimum_has_been_set());
@@ -179,7 +179,7 @@ map<int, double> convolve_histogram_with_gaussian(const map<int, double>& input_
 
 //==================================================================================
 
-double gaussian_histogram_fit_FCN::operator()(const std::vector<double>& gauss_pars) const
+double GaussianHistogramFitFCN::operator()(const std::vector<double>& gauss_pars) const
 {
     assert(gauss_pars.size()==3);
     map<int,double> model=get_model_histogram(gauss_pars);
@@ -189,7 +189,7 @@ double gaussian_histogram_fit_FCN::operator()(const std::vector<double>& gauss_p
 
 }
 
-map<int,double> gaussian_histogram_fit_FCN::get_model_histogram(
+map<int,double> GaussianHistogramFitFCN::get_model_histogram(
     const std::vector<double>& gauss_pars) const
 {
     map<int,double>model;
@@ -202,7 +202,7 @@ map<int,double> gaussian_histogram_fit_FCN::get_model_histogram(
 }
 
 //==================================================================================
-map<int,double> exponential_histogram_fit_FCN::get_model_histogram(
+map<int,double> ExponentialHistogramFitFCN::get_model_histogram(
     const std::vector<double>& exp_pars) const
 {
     assert(exp_pars.size()==2);
@@ -215,7 +215,7 @@ map<int,double> exponential_histogram_fit_FCN::get_model_histogram(
     return model;
 }
 
-double  exponential_histogram_fit_FCN::operator()(const std::vector<double>& exp_pars)
+double  ExponentialHistogramFitFCN::operator()(const std::vector<double>& exp_pars)
 const
 {
     assert(exp_pars.size()==2);
@@ -226,13 +226,13 @@ const
 }
 //==================================================================================
 //map<int,double> full_EMCCD_low_light_level_histogram_model::get_model_histogram(
-//        const gain_info& inf){
+//        const GainData& inf){
 //
 //}
 //
 
 //==================================================================================
-full_EMCCD_histogram_fit_FCN::full_EMCCD_histogram_fit_FCN(const map<int,long>& histogram)
+FullEmccdHistogramFitFCN::FullEmccdHistogramFitFCN(const map<int,long>& histogram)
     :
     error_def(1.0), data_(histogram)
 {
@@ -240,13 +240,13 @@ full_EMCCD_histogram_fit_FCN::full_EMCCD_histogram_fit_FCN(const map<int,long>& 
     fit_rgn_max_ = get_max_value_pair(data_).first;
 }
 
-full_EMCCD_histogram_fit_FCN::full_EMCCD_histogram_fit_FCN(const map<int,long>& histogram,
+FullEmccdHistogramFitFCN::FullEmccdHistogramFitFCN(const map<int,long>& histogram,
         const int fit_region_min, const int fit_region_max):
     error_def(1.0), data_(histogram),
     fit_rgn_min_(fit_region_min), fit_rgn_max_(fit_region_max)
 {}
 
-double full_EMCCD_histogram_fit_FCN::operator()(const std::vector<double>& pars) const
+double FullEmccdHistogramFitFCN::operator()(const std::vector<double>& pars) const
 {
     assert(pars.size()==npars_);
 
@@ -265,7 +265,7 @@ double full_EMCCD_histogram_fit_FCN::operator()(const std::vector<double>& pars)
 
     return normalised;
 }
-vector<double> full_EMCCD_histogram_fit_FCN::generate_pars_vec(const gain_info& inf)
+vector<double> FullEmccdHistogramFitFCN::generate_pars_vec(const GainData& inf)
 {
     vector<double> pars;
     pars.push_back(inf.bias_pedestal);
@@ -279,7 +279,7 @@ vector<double> full_EMCCD_histogram_fit_FCN::generate_pars_vec(const gain_info& 
 }
 
 
-map<int,double> full_EMCCD_histogram_fit_FCN::get_CICIR_model_histogram(
+map<int,double> FullEmccdHistogramFitFCN::get_CICIR_model_histogram(
     const double gain,
     const double N_CICIR_pix,
     const int N_EM_stages,
@@ -314,7 +314,7 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_CICIR_model_histogram(
     return CICIR_histogram;
 }
 
-map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
+map<int,double> FullEmccdHistogramFitFCN::get_model_histogram(
     const std::vector<double>& pars) const
 {
     assert(pars.size()==npars_);
@@ -378,9 +378,9 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
     register_output_model[0]  = dark_pix;
 
     map<int,double> CICIR_register_component =
-        full_EMCCD_histogram_fit_FCN::get_CICIR_model_histogram(
+        FullEmccdHistogramFitFCN::get_CICIR_model_histogram(
             phot_gain, N_serial_CIC_pix,
-            full_EMCCD_histogram_fit_FCN::N_EM_serial_register_stages,
+            FullEmccdHistogramFitFCN::N_EM_serial_register_stages,
             tail_range + convolution_half_width
         );
 
@@ -427,8 +427,8 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
 //    histogram_min_max[-readout_noise_in_ADU*5]=0;
 //    histogram_min_max[10000]=0;
 //
-//    full_EMCCD_histogram_fit_FCN full_model(histogram_min_max);
-//    gain_info full_pars;
+//    FullEmccdHistogramFitFCN full_model(histogram_min_max);
+//    GainData full_pars;
 //    full_pars.bias_pedestal = 0.0;
 //    full_pars.readout_sigma = readout_noise_in_ADU;
 //    full_pars.gain = mean_photon_gain_in_ADU;
@@ -437,7 +437,7 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
 //    full_pars.N_dark_pix = 0.0;
 ////                - mean_photon_gain_in_ADU*CIC_event_rate_per_pixel_readout);
 //
-//    gain_info photon_hist_pars(full_pars);
+//    GainData photon_hist_pars(full_pars);
 //    photon_hist_pars.N_light_pix=1.0;
 //    map<int,double> light_model = full_model.get_model_histogram(
 //        full_model.generate_pars_vec(photon_hist_pars));
@@ -454,7 +454,7 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
 //        cerr<<"Filtered photon fraction: "<< pass_rate_for_photon_events<<endl;
 //    }
 //
-////    gain_info CICIR_hist_pars(full_pars);
+////    GainData CICIR_hist_pars(full_pars);
 ////    CICIR_hist_pars.N_serial_CIC_pix=1.0;
 ////    map<int,double> CICIR_model = full_model.get_model_histogram(
 ////        full_model.generate_pars_vec(CICIR_hist_pars));
@@ -471,7 +471,7 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
 ////        cerr<<"Filtered CICIR fraction: "<< CICIR_fraction<<endl;
 ////    }
 ////
-////    gain_info RO_hist_pars(full_pars);
+////    GainData RO_hist_pars(full_pars);
 ////    RO_hist_pars.N_dark_pix=1.0;
 ////    map<int,double> RO_model = full_model.get_model_histogram(
 ////        full_model.generate_pars_vec(RO_hist_pars));
@@ -516,7 +516,7 @@ map<int,double> full_EMCCD_histogram_fit_FCN::get_model_histogram(
 
 //==================================================================================
 
-Thresholded_SNR_Calculator::Thresholded_SNR_Calculator(
+ThresholdedSnrCalculator::ThresholdedSnrCalculator(
     const double RO,
     const double gain,
     const double light_level,
@@ -524,7 +524,7 @@ Thresholded_SNR_Calculator::Thresholded_SNR_Calculator(
 ):gain_(gain), light_level_(light_level)
 {
     if ((light_level) > 0.5) {
-        throw runtime_error("Thresholded_SNR_Calculator() ---"
+        throw runtime_error("ThresholdedSnrCalculator() ---"
                             "Light level too high");
     }
 
@@ -532,8 +532,8 @@ Thresholded_SNR_Calculator::Thresholded_SNR_Calculator(
     histogram_min_max[-RO*5]=0;
     histogram_min_max[10000]=0;
 
-    full_EMCCD_histogram_fit_FCN full_model(histogram_min_max);
-    gain_info full_pars;
+    FullEmccdHistogramFitFCN full_model(histogram_min_max);
+    GainData full_pars;
     full_pars.bias_pedestal = 0.0;
     full_pars.readout_sigma = RO;
     full_pars.gain = gain;
@@ -542,7 +542,7 @@ Thresholded_SNR_Calculator::Thresholded_SNR_Calculator(
     full_pars.N_dark_pix = 0.0;
 //                - mean_photon_gain_in_ADU*CIC_event_rate_per_pixel_readout);
 
-    gain_info photon_hist_pars(full_pars);
+    GainData photon_hist_pars(full_pars);
     photon_hist_pars.N_light_pix=1.0;
 
     photon_distribution_ = full_model.get_model_histogram(
@@ -560,7 +560,7 @@ Thresholded_SNR_Calculator::Thresholded_SNR_Calculator(
 
 }
 
-double Thresholded_SNR_Calculator::calc_SNR_at_threshold(
+double ThresholdedSnrCalculator::calc_SNR_at_threshold(
     const double threshold_in_photo_electrons) const
 {
 
@@ -587,7 +587,7 @@ double Thresholded_SNR_Calculator::calc_SNR_at_threshold(
     return SNR;
 }
 
-double Thresholded_SNR_Calculator::find_optimum_threshold(
+double ThresholdedSnrCalculator::find_optimum_threshold(
     const double search_min,
     const double search_max,
     const double stepsize
@@ -784,7 +784,7 @@ vector<double> fit_readout_gaussian(const map<int,long>& histogram_data,
     gaussian_section.erase(
         0); //remove weird spike at 0 value. fixme! - track down the origin of this.
 
-    gaussian_histogram_fit_FCN hump_fitter(gaussian_section);
+    GaussianHistogramFitFCN hump_fitter(gaussian_section);
     ROOT::Minuit2::MnUserParameters gauss_pars;
     gauss_pars.Add("HistPeakValue", peak.first, 2);
     gauss_pars.SetLimits("HistPeakValue", -100.0, 20000.0);
@@ -817,7 +817,7 @@ vector<double> fit_exponential_tail(const map<int,long>& histogram_data,
     map<int,long> tail_section = get_tail_fitting_section(histogram_data,
                                  gaussian_sigma_estimate ,output_to_screen);
 
-    exponential_histogram_fit_FCN tail_fitter(tail_section);
+    ExponentialHistogramFitFCN tail_fitter(tail_section);
     double log_slope_estimate = estimate_log_slope(tail_section);
     if (output_to_screen) { cout <<"Initial slope estimate: " <<log_slope_estimate<<endl; }
     float gain_init_est = -1.0/log_slope_estimate;
@@ -855,7 +855,7 @@ vector<double> fit_exponential_tail_fixed_gain(const map<int,long>& histogram_da
     map<int,long> tail_section = get_tail_fitting_section(histogram_data,
                                  gaussian_sigma_estimate ,output_to_screen);
 
-    exponential_histogram_fit_FCN tail_fitter(tail_section);
+    ExponentialHistogramFitFCN tail_fitter(tail_section);
 
     double gain_init_est=gain_estimate;
     double amplitude_estimate=peak.second*0.1 / exp(
@@ -882,14 +882,14 @@ vector<double> fit_exponential_tail_fixed_gain(const map<int,long>& histogram_da
 
 
 
-gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
-                             const gain_info& approx_fit_init,
+GainData fit_full_CCD_model(const map<int,long>& histogram_data,
+                             const GainData& approx_fit_init,
                              const bool output_to_screen
 //        , const bool sqrt_serial_CIC_gain_mode
                             )
 {
     //Hardcoded initial estimates (fixme?)
-    gain_info approx_fit(approx_fit_init);
+    GainData approx_fit(approx_fit_init);
 
     approx_fit.N_serial_CIC_pix= approx_fit.actual_number_pix_events_recorded -
                                  (approx_fit.N_dark_pix + approx_fit.N_light_pix);
@@ -908,7 +908,7 @@ gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
     const string key_NSerialCICPix = "NSerCICPix";
 //    const string key_SerialCICGain = "SerCICGain";
 
-    //NB! Ensure ordering matches definition for full_EMCCD_histogram_fit_FCN::operator() !!!
+    //NB! Ensure ordering matches definition for FullEmccdHistogramFitFCN::operator() !!!
 
     mnpars.Add(key_BiasPedestal, approx_fit.bias_pedestal, 2);
     mnpars.SetLimits(key_BiasPedestal, approx_fit.bias_pedestal-2,
@@ -954,7 +954,7 @@ gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
         get_serial_CIC_model_fitting_section(histogram_data,
                 approx_fit.bias_pedestal, approx_fit.readout_sigma);
 
-    full_EMCCD_histogram_fit_FCN CIC_fit_fcn(serial_CIC_region);
+    FullEmccdHistogramFitFCN CIC_fit_fcn(serial_CIC_region);
 
     if (output_to_screen) cout<<"---------------------------------\n"
                                   << "Init params:" << mnpars<<endl;
@@ -975,7 +975,7 @@ gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
         get_full_model_fitting_section(histogram_data,
                                        approx_fit.bias_pedestal, approx_fit.readout_sigma);
 //
-    full_EMCCD_histogram_fit_FCN full_fit_fcn(full_fitting_region);
+    FullEmccdHistogramFitFCN full_fit_fcn(full_fitting_region);
 
     mnpars = fitted_pars;
     mnpars.Release(key_BiasPedestal);
@@ -1002,7 +1002,7 @@ gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
     fitted_pars = min3.UserParameters();
     if (output_to_screen) { cout<<"Params after fit 3:" << fitted_pars << endl; }
     //--------------------------------------------------------------------------------
-    gain_info fitted_info(approx_fit);
+    GainData fitted_info(approx_fit);
     if (min3.IsValid()) {
         fitted_info.bias_pedestal = fitted_pars.Value(key_BiasPedestal);
         fitted_info.readout_sigma = fitted_pars.Value(key_ROSigma);
@@ -1037,7 +1037,7 @@ gain_info fit_full_CCD_model(const map<int,long>& histogram_data,
 }
 
 
-gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
+GainData fit_CCD_histogram(const map<int,long>& histogram_bins,
                             const bool perform_advanced_fit,
                             const bool fixed_gain_mode, const double gain_value,
                             const bool output_to_screen
@@ -1050,7 +1050,7 @@ gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
     if (fixed_gain_mode) { exp_pars = gain_utils::fit_exponential_tail_fixed_gain(histogram_bins, gauss_pars.back(), gain_value, true); }
     else { exp_pars= gain_utils::fit_exponential_tail(histogram_bins, gauss_pars.back(), output_to_screen && !perform_advanced_fit); }
 
-    gain_info approx_results;
+    GainData approx_results;
     approx_results.bias_pedestal = gauss_pars[0];
     double peak_gaussian_count = gauss_pars[1];
     approx_results.readout_sigma = gauss_pars[2];
@@ -1085,7 +1085,7 @@ gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
     if (perform_advanced_fit) {
 //    cerr<<"Running advanced fit...";
         //Put in initial estimates:
-        gain_info full_fit = fit_full_CCD_model(histogram_bins,
+        GainData full_fit = fit_full_CCD_model(histogram_bins,
                                                 approx_results,
                                                 output_to_screen
 //                , sqrt_serial_CIC_gain_mode
@@ -1107,14 +1107,14 @@ gain_info fit_CCD_histogram(const map<int,long>& histogram_bins,
 }
 
 //==================================================================================
-gain_info::gain_info()
+GainData::GainData()
     : bias_pedestal(-1),readout_sigma(-1),gain(-1),
       N_dark_pix(-1), N_light_pix(-1), N_serial_CIC_pix(-1),
       photon_event_freq(-1), serial_CIC_rate(-1),
       actual_number_pix_events_recorded(0)
 {}
 
-void gain_info::write_to_file(const std::string& filename)
+void GainData::write_to_file(const std::string& filename)
 {
     ofstream outputfile(filename.c_str());
     if (outputfile) {
@@ -1123,7 +1123,7 @@ void gain_info::write_to_file(const std::string& filename)
     } else { throw runtime_error("Cannot write to gain_inf file" + filename); }
 }
 
-gain_info::gain_info(const string& filename)
+GainData::GainData(const string& filename)
 {
     using namespace string_utils;
     ifstream datafile(filename.c_str());
@@ -1141,7 +1141,7 @@ gain_info::gain_info(const string& filename)
     serial_CIC_rate=atof(line_segments[4]);
 }
 
-std::ostream& operator<<(std::ostream& os, const gain_info& g_inf)
+std::ostream& operator<<(std::ostream& os, const GainData& g_inf)
 {
     os<<g_inf.bias_pedestal<<" "<<g_inf.readout_sigma<<" "
       <<g_inf.gain<<" "
@@ -1153,7 +1153,7 @@ std::ostream& operator<<(std::ostream& os, const gain_info& g_inf)
     return os;
 }
 
-std::string gain_info::get_column_headers()
+std::string GainData::get_column_headers()
 {
     return "bias_pedestal ""readout_sigma "
            "gain "
@@ -1167,23 +1167,23 @@ std::string gain_info::get_column_headers()
 //==================================================================================
 
 template<typename input_datatype>
-CCDImage<input_datatype>& normalise_CCD_with_uniform_gain(CCDImage<input_datatype>& input,
-        const gain_info& det_info)
+CcdImage<input_datatype>& normalise_CCD_with_uniform_gain(CcdImage<input_datatype>& input,
+        const GainData& det_info)
 {
     input.pix-=det_info.bias_pedestal;
     input.pix/=det_info.gain;
     return input;
 }
 template
-CCDImage<float>& normalise_CCD_with_uniform_gain(CCDImage<float>& input,
-        const gain_info& det_info);
+CcdImage<float>& normalise_CCD_with_uniform_gain(CcdImage<float>& input,
+        const GainData& det_info);
 
 template
-CCDImage<double>& normalise_CCD_with_uniform_gain(CCDImage<double>& input,
-        const gain_info& det_info);
+CcdImage<double>& normalise_CCD_with_uniform_gain(CcdImage<double>& input,
+        const GainData& det_info);
 
 
-//double_bitmap& normalise_CCD_with_gain_map(double_bitmap& input, const gain_info& det_info, const double_bitmap& gain_map){
+//double_bitmap& normalise_CCD_with_gain_map(double_bitmap& input, const GainData& det_info, const double_bitmap& gain_map){
 ////    input.add_normalisation_flag();
 //    input-=det_info.bias_pedestal;
 //    input/=gain_map;
@@ -1193,10 +1193,10 @@ CCDImage<double>& normalise_CCD_with_uniform_gain(CCDImage<double>& input,
 
 //==================================================================================
 
-CCDImage<float> threshold_bitmap(const CCDImage<float>& input,
+CcdImage<float> threshold_bitmap(const CcdImage<float>& input,
                                  const double threshold_level)
 {
-    CCDImage<float> thresholded(input);
+    CcdImage<float> thresholded(input);
 //    assert(input.key_exists("CCDNORMD"));
     for (PixelIterator i(input.pix.range()); i!=i.end; ++i) {
         input.pix(i)>threshold_level ? thresholded.pix(i)=1.0f : thresholded.pix(i)=0.0f;
@@ -1206,10 +1206,10 @@ CCDImage<float> threshold_bitmap(const CCDImage<float>& input,
 }
 
 
-CCDImage<float> create_threshold_mask(const CCDImage<float>& input,
+CcdImage<float> create_threshold_mask(const CcdImage<float>& input,
                                       const float threshold_count)
 {
-    CCDImage<float> mask(input);
+    CcdImage<float> mask(input);
     mask.pix.assign(1.0);
 //     if (!input.key_exists("CCDNORMD")) throw logic_error("create_threshold_mask takes normalised input");
     for (PixelIterator pix(input.pix.range()); pix!=pix.end; ++pix) {
@@ -1226,7 +1226,7 @@ CCDImage<float> create_threshold_mask(const CCDImage<float>& input,
 
 
 
-gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
+GainData analyse_histogram(const map<int, long>& full_data_histogram ,
                             const string& output_dir)
 {
     gain_utils::write_histogram_data_to_file(full_data_histogram,
@@ -1234,7 +1234,7 @@ gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
     vector<double> hump_pars= gain_utils::fit_readout_gaussian(full_data_histogram, true);
 
     map<int,long> gauss_data = gain_utils::get_gaussian_fitting_section(full_data_histogram);
-    gain_utils::gaussian_histogram_fit_FCN gauss_fitter(gauss_data);
+    gain_utils::GaussianHistogramFitFCN gauss_fitter(gauss_data);
     map<int,double> gauss_fitted_bit = gauss_fitter.get_model_histogram(hump_pars);
     gain_utils::write_histogram_data_to_file(gauss_data, output_dir+"hump_data.dat");
     gain_utils::write_histogram_data_to_file(gauss_fitted_bit,
@@ -1242,7 +1242,7 @@ gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
 
     map<int,long> threshed_data = gain_utils::threshold_above_count(full_data_histogram, 100);
 
-    gain_utils::gaussian_histogram_fit_FCN gauss_full(threshed_data);
+    gain_utils::GaussianHistogramFitFCN gauss_full(threshed_data);
     map<int,double> gauss_model = gauss_full.get_model_histogram(hump_pars);
     gain_utils::write_histogram_data_to_file(gauss_model, output_dir+"hump_model_full.dat");
 
@@ -1251,7 +1251,7 @@ gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
 
     map<int, long> fitted_tail_data = gain_utils::get_tail_fitting_section(
                                           full_data_histogram, hump_pars.back());
-    gain_utils::exponential_histogram_fit_FCN tail_fitter(fitted_tail_data);
+    gain_utils::ExponentialHistogramFitFCN tail_fitter(fitted_tail_data);
     map<int, double> fitted_tail_model = tail_fitter.get_model_histogram(tail_pars);
     gain_utils::write_histogram_data_to_file(fitted_tail_data, output_dir+"tail_data.dat");
     gain_utils::write_histogram_data_to_file(fitted_tail_model,
@@ -1259,7 +1259,7 @@ gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
 
     map<int, long> postive_section = gain_utils::get_points_at_values_greater_than(
                                          full_data_histogram, hump_pars.front()+hump_pars.back()); //
-    gain_utils::exponential_histogram_fit_FCN tail_model(postive_section);
+    gain_utils::ExponentialHistogramFitFCN tail_model(postive_section);
     map<int, double>full_tail_model = tail_model.get_model_histogram(tail_pars);
     gain_utils::write_histogram_data_to_file(full_tail_model,
             output_dir+"tail_model_full.dat");
@@ -1278,7 +1278,7 @@ gain_info analyse_histogram(const map<int, long>& full_data_histogram ,
 
     gain_utils::write_histogram_data_to_file(unfitted_data, output_dir+"unfitted_data.dat");
 
-    gain_info results;
+    GainData results;
     results.bias_pedestal = hump_pars.front();
     results.readout_sigma = hump_pars.back();
     results.gain = tail_pars.back();

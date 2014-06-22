@@ -30,8 +30,8 @@ SUITE(minuit_psf_models)
 
     TEST(Position_MnPar_interface) {
         psf_fitting::Mn2_models::PositionFit posn;
-        posn.centre=CCD_Position(3.14,2.55);
-        posn.error_estimate=CCD_PixelShift(0.04,0.03);
+        posn.centre=CcdPosition(3.14,2.55);
+        posn.error_estimate=CcdPixelShift(0.04,0.03);
 
         ROOT::Minuit2::MnUserParameters pars;
         string prefix = "Testing_PositionFit_Interface_";
@@ -47,11 +47,11 @@ SUITE(minuit_psf_models)
 
 
     TEST(gaussian_MnPar_interface) {
-        CCD_Position centre(3.14,2.718);
-        CCD_PixelShift error_est(0.4,0.5);
+        CcdPosition centre(3.14,2.718);
+        CcdPixelShift error_est(0.4,0.5);
 
-        psf_models::gaussian_psf_model g_model(5.5, 2.3);
-        psf_fitting::Mn2_models::PSF_Fit<psf_models::gaussian_psf_model> g_fit;
+        psf_models::GaussianPsfModel g_model(5.5, 2.3);
+        psf_fitting::Mn2_models::PsfFit<psf_models::GaussianPsfModel> g_fit;
         g_fit.model = g_model;
         g_fit.Position.centre=centre;
         g_fit.Position.error_estimate=error_est;
@@ -60,14 +60,14 @@ SUITE(minuit_psf_models)
 
         string prefix = "testing_mnpars_interface_";
 
-        psf_fitting::Mn2_models::gaussian_psf::
-        set_MnPars_from_PSF_Fit(g_fit, &pars, prefix);
+        psf_fitting::Mn2_models::GaussianPsf::
+        set_MnPars_from_PsfFit(g_fit, &pars, prefix);
 
 //        cout<<pars<<endl;
 
         psf_fitting::Mn2_models::
-        PSF_Fit<psf_models::gaussian_psf_model> pulled_fit =
-            psf_fitting::Mn2_models::gaussian_psf::pull_PSF_Fit_from_MnPars(pars,  prefix);
+        PsfFit<psf_models::GaussianPsfModel> pulled_fit =
+            psf_fitting::Mn2_models::GaussianPsf::pull_PsfFit_from_MnPars(pars,  prefix);
 
         CHECK_EQUAL(g_fit.model.sigma_in_CCD_pix, pulled_fit.model.sigma_in_CCD_pix);
         //etc. (to do)

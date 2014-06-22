@@ -11,32 +11,32 @@ BOOST_PYTHON_MODULE(lucky_pipeline)
     using namespace boost::python;
     using namespace coela;
 
-    class_<CCD_DatasetInfo>("CCD_DatasetInfo")
+    class_<CcdDatasetInfo>("CcdDatasetInfo")
     .def(init<std::string>()) //Load from file(filename)
-    .def("write", &CCD_DatasetInfo::write_to_file)
+    .def("write", &CcdDatasetInfo::write_to_file)
     .def_readwrite("ccd_id",
-                   &CCD_DatasetInfo::ccd_id)
+                   &CcdDatasetInfo::ccd_id)
     .def_readwrite("CCD_inputdir",
-                   &CCD_DatasetInfo::CCD_inputdir)
+                   &CcdDatasetInfo::CCD_inputdir)
     .def_readwrite("CCD_outputdir",
-                   &CCD_DatasetInfo::CCD_outputdir)
+                   &CcdDatasetInfo::CCD_outputdir)
     .def_readwrite("in_filestem",
-                   &CCD_DatasetInfo::in_filestem)
+                   &CcdDatasetInfo::in_filestem)
     .def_readwrite("out_filestem",
-                   &CCD_DatasetInfo::out_filestem)
+                   &CcdDatasetInfo::out_filestem)
     .def_readwrite("extension",
-                   &CCD_DatasetInfo::extension)
+                   &CcdDatasetInfo::extension)
     .def_readwrite("dataset_output_base_dir",
-                   &CCD_DatasetInfo::dataset_output_base_dir)
+                   &CcdDatasetInfo::dataset_output_base_dir)
 
     .def_readwrite("default_camera_config_file",
-                   &CCD_DatasetInfo::default_camera_config_file)
+                   &CcdDatasetInfo::default_camera_config_file)
     .def_readwrite("default_guide_star_region_file",
-                   &CCD_DatasetInfo::default_guide_star_region_file)
+                   &CcdDatasetInfo::default_guide_star_region_file)
     .def_readwrite("default_histogram_region_file",
-                   &CCD_DatasetInfo::default_faint_histogram_region_file)
+                   &CcdDatasetInfo::default_faint_histogram_region_file)
     .def_readwrite("most_recently_output_frame_list",
-                   &CCD_DatasetInfo::most_recently_output_frame_list)
+                   &CcdDatasetInfo::most_recently_output_frame_list)
     ;
 
     class_< std::vector<double> >("double_vec")

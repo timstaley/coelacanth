@@ -29,7 +29,7 @@ SUITE(CCD_dataset_info)
 
     TEST(serialization_to_stream) {
 
-        CCD_DatasetInfo cdi1;
+        CcdDatasetInfo cdi1;
         cdi1.ccd_id=42;
         cdi1.CCD_inputdir = "/home/test/ccd42";
         cdi1.CCD_outputdir = "/home/test_out/ccd42";
@@ -50,7 +50,7 @@ SUITE(CCD_dataset_info)
         ss1<<cdi1;
         str1=ss1.str();
 
-        CCD_DatasetInfo cdi2;
+        CcdDatasetInfo cdi2;
         ss1>>cdi2;
 
         ss2 << cdi2;

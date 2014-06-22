@@ -13,9 +13,9 @@ namespace frame_registration {
 using namespace psf_models;
 //==============================================================================================================
 
-psf_models::reference_psf convert_to_log_values(const psf_models::reference_psf& in)
+psf_models::ReferencePsf convert_to_log_values(const psf_models::ReferencePsf& in)
 {
-    psf_models::reference_psf copy(in);
+    psf_models::ReferencePsf copy(in);
     if (copy.psf_image.pix(copy.psf_image.pix.min_PixelIndex()) <0)
         throw std::logic_error("ref_psf::convert_to_log_vals - "
                                "Not recommended for reference PSF models which have negative values");
@@ -27,24 +27,24 @@ psf_models::reference_psf convert_to_log_values(const psf_models::reference_psf&
 }
 //==============================================================================================================
 template<typename input_datatype>
-gs_lock<CCD_Position> find_best_psf_match(
-    const CCDImage<input_datatype>& input_image,
-    const CCD_BoxRegion& gs_region,
-    const psf_models::reference_psf& ref_psf,
+GuideStarLock<CcdPosition> find_best_psf_match(
+    const CcdImage<input_datatype>& input_image,
+    const CcdBoxRegion& gs_region,
+    const psf_models::ReferencePsf& ref_psf,
     const double input_resample_factor,
     const double convolution_threshold_factor,
     const bool fit_parabola)
 {
 
-    CCDImage<double> resampled_sub_image;
+    CcdImage<double> resampled_sub_image;
     if (input_resample_factor!=1.0) {
         resampled_sub_image=
             image_utils::bicubic_resample_non_edge_region(
                 input_image , gs_region, input_resample_factor
             );
     } else {
-        resampled_sub_image=CCDImage<double>(
-                                CCDImage<input_datatype>::sub_image(input_image, gs_region));
+        resampled_sub_image=CcdImage<double>(
+                                CcdImage<input_datatype>::sub_image(input_image, gs_region));
     }
 
     if (resampled_sub_image.CCD_grid.pixel_width_ !=
@@ -56,7 +56,7 @@ gs_lock<CCD_Position> find_best_psf_match(
         throw std::runtime_error("find_best_psf_match: - reference psf pixel scale does not match resampled input;");
     }
 
-    CCDImage<double> convolution;
+    CcdImage<double> convolution;
     if (convolution_threshold_factor==0.0) {
         convolution.pix=
             spatial_convolution::convolve_with_kernel(
@@ -148,26 +148,26 @@ gs_lock<CCD_Position> find_best_psf_match(
 
     PixelPosition subimage_psf_lock = conv_peak_position + ref_psf_centre_offset;
 
-    CCD_Position psf_lock_posn = resampled_sub_image.CCD_grid.corresponding_grid_Position(
+    CcdPosition psf_lock_posn = resampled_sub_image.CCD_grid.corresponding_grid_Position(
                                      subimage_psf_lock);
 
-    return gs_lock<CCD_Position>(psf_lock_posn, conv_peak);
+    return GuideStarLock<CcdPosition>(psf_lock_posn, conv_peak);
 }
 
 
 template
-gs_lock<CCD_Position> find_best_psf_match(
-    const CCDImage<float>& input_image,
-    const CCD_BoxRegion& gs_region,
-    const psf_models::reference_psf& ref_psf,
+GuideStarLock<CcdPosition> find_best_psf_match(
+    const CcdImage<float>& input_image,
+    const CcdBoxRegion& gs_region,
+    const psf_models::ReferencePsf& ref_psf,
     const double input_resample_factor,
     const double convolution_threshold_factor,
     const bool fit_parabola);
 template
-gs_lock<CCD_Position> find_best_psf_match(
-    const CCDImage<double>& input_image,
-    const CCD_BoxRegion& gs_region,
-    const psf_models::reference_psf& ref_psf,
+GuideStarLock<CcdPosition> find_best_psf_match(
+    const CcdImage<double>& input_image,
+    const CcdBoxRegion& gs_region,
+    const psf_models::ReferencePsf& ref_psf,
     const double input_resample_factor,
     const double convolution_threshold_factor,
     const bool fit_parabola);

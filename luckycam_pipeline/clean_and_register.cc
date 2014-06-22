@@ -37,7 +37,7 @@
  * Load file list, either from index or generated.
  * Determine file format and adjust regions accordingly
  * Clean each file. Add to averages. Optionally, write decompressed to file.
- * Gather gain information for the CCD for this run. Write gain_info to CCD base dir.
+ * Gather gain information for the CCD for this run. Write GainData to CCD base dir.
  * If registering: Register all guide stars on this CCD, write results to frame_list in output base dir.
  *
  */
@@ -45,7 +45,7 @@
 using namespace coela;
 //using namespace coela::image_cleanup;
 using namespace std;
-//using psf_models::reference_psf;
+//using psf_models::ReferencePsf;
 using tbb::tick_count;
 //using namespace  single_CCD_threading_tools;
 
@@ -82,7 +82,7 @@ vector<string> xcorr_templates::get_defined_template_types()
 
 struct ProgramOptionSet {
     string dataset_info_filename;
-    CCD_DatasetInfo dataset;
+    CcdDatasetInfo dataset;
 
     CameraConfigInfo camconf;
 
@@ -107,21 +107,21 @@ struct ProgramOptionSet {
     size_t n_frames_to_use_for_column_bias_gen;
 
     bool frame_by_frame_temporal_debiasing_on;
-    CCD_BoxRegion temporal_debiasing_hist_region;
+    CcdBoxRegion temporal_debiasing_hist_region;
     PixelRange temporal_debiasing_hist_box;
 
     bool build_faint_histogram;
     bool build_raw_histogram_only; //Grab histogram only, do not use for standard debiasing.
     string faint_hist_region_filename;
-    CCD_BoxRegion
+    CcdBoxRegion
     faint_hist_region; //Usually describes a region of low flux suitable for EM gain determination.
     string faint_histogram_output_filename; //However, the user may choose to create a histogram of a bright region to check for saturation.
 
-    bool dynamic_row_debiasing_on;
+    bool DynamicRowDebiasing_on;
 
     bool gs_registration_on;
     string guide_star_region_file;
-    vector<CCD_BoxRegion> guide_star_regions;
+    vector<CcdBoxRegion> guide_star_regions;
     double analysis_resample_factor;
     bool perform_centroiding;
 //    bool using_log_kernel;
@@ -165,7 +165,7 @@ ProgramOptionSet get_default_options()
     default_opts.faint_histogram_output_filename="bg_histogram.txt";
 
 
-    default_opts.dynamic_row_debiasing_on=false;
+    default_opts.DynamicRowDebiasing_on=false;
 
     default_opts.gs_registration_on=false;
     default_opts.analysis_resample_factor=4.0;
@@ -182,7 +182,7 @@ ProgramOptionSet get_default_options()
 
 void print_usage_and_exit(const ProgramOptionSet& defaultopts)
 {
-    cerr<<"Usage: Cleanup CCD_DatasetInfo.txt  \n\n"
+    cerr<<"Usage: Cleanup CcdDatasetInfo.txt  \n\n"
         "[-g --gs_registration [gs_rgn.reg] ]     ---Perform guide star registration. if no region file specified, use default from CCD_dataset_info.txt\n"
         "[-b --build_histogram [background_rgn.reg] ]     ---Gather histogram. If no region file specified, use default from CCD_dataset_info.txt\n"
         "[-n --nthreads (number)]           ---run the pipeline with n threads (default 6) \n\n"
@@ -217,7 +217,7 @@ ProgramOptionSet load_options(int argc, char** argv)
 
     ProgramOptionSet opts=default_opts;
     opts.dataset_info_filename = argv[1];
-    opts.dataset = CCD_DatasetInfo(opts.dataset_info_filename);
+    opts.dataset = CcdDatasetInfo(opts.dataset_info_filename);
 
     opts.camconf = CameraConfigInfo(opts.dataset.default_camera_config_file);
 
@@ -232,7 +232,7 @@ ProgramOptionSet load_options(int argc, char** argv)
             if (opts.guide_star_region_file.empty()) {
                 opts.guide_star_region_file= opts.dataset.default_guide_star_region_file;
             }
-            opts.guide_star_regions = ds9::load_vector_from_file<CCD_BoxRegion>
+            opts.guide_star_regions = ds9::load_vector_from_file<CcdBoxRegion>
                                       (opts.guide_star_region_file);
             cerr<<"********    "<<opts.guide_star_regions.size()<< "         **********"<<endl;
             if (opts.guide_star_regions.empty()) {
@@ -259,7 +259,7 @@ ProgramOptionSet load_options(int argc, char** argv)
             if (opts.faint_hist_region_filename.empty()) {
                 opts.faint_hist_region_filename= opts.dataset.default_faint_histogram_region_file;
             }
-            opts.faint_hist_region = ds9::load_vector_from_file<CCD_BoxRegion>
+            opts.faint_hist_region = ds9::load_vector_from_file<CcdBoxRegion>
                                      (opts.faint_hist_region_filename).front();
             cout<<"Will build histogram for region loaded from file:"<<
                 opts.faint_hist_region_filename<<endl;
@@ -379,7 +379,7 @@ int main(int argc, char** argv)
     ProgramOptionSet opts=load_options(argc, argv);
     cout <<"\n*****Lucky Cleanup ***** " <<endl;
 
-    const CCD_DatasetInfo& cdi(opts.dataset);
+    const CcdDatasetInfo& cdi(opts.dataset);
     cout<<"CCD output dir: "<<cdi.CCD_outputdir<<endl;
 
 
@@ -424,7 +424,7 @@ int main(int argc, char** argv)
 
     assert(!frame_vec.empty());
     HistogramContainer14bit temp_hist;
-    CCDImage<float> first(frame_vec.front().file_path,frame_vec.front().header_byte_offset);
+    CcdImage<float> first(frame_vec.front().file_path,frame_vec.front().header_byte_offset);
     first.initialize_CCD_grid_for_raw_data();
 
     FitsHeader first_header(frame_vec.front().file_path,frame_vec.front().header_byte_offset);
@@ -433,7 +433,7 @@ int main(int argc, char** argv)
     PixelRange cropped_PixelRange;
     if (!opts.camconf.simulated_data) {
         cropped_PixelRange=camconf.get_calibration_info_for_CCD_id(cdi.ccd_id).cropped_PixelRange;
-        first = CCDImage<float>::sub_image(first, cropped_PixelRange) ;
+        first = CcdImage<float>::sub_image(first, cropped_PixelRange) ;
         first.write_to_file(cdi.CCD_outputdir+"first_input_image_cropped.fits");
     }
 
@@ -447,17 +447,17 @@ int main(int argc, char** argv)
     if (opts.output_windowed_images) {
         window_box =
             first.CCD_grid.corresponding_pixel_region(
-                ds9::load_vector_from_file<CCD_BoxRegion>(opts.window_region_filename).front()
+                ds9::load_vector_from_file<CcdBoxRegion>(opts.window_region_filename).front()
             ).expand_to_pixel_boundaries().bounded_pixels();
     }
 
     //=========================  Load any relevant background regions =========================================
     map<int,long> gain_histogram;
-    CCD_BoxRegion gain_CCD_rgn;
+    CcdBoxRegion gain_CCD_rgn;
     PixelRange gain_box;
 
     if (opts.build_faint_histogram) {
-        CCD_BoxRegion gain_CCD_rgn = opts.faint_hist_region;
+        CcdBoxRegion gain_CCD_rgn = opts.faint_hist_region;
         gain_CCD_rgn.expand_to_pixel_boundaries() ;
         gain_box =  first.CCD_grid.corresponding_pixel_region(gain_CCD_rgn).bounded_pixels() ;
         cout <<"Building histogram from CCD_rgn " <<gain_CCD_rgn<<endl;
@@ -470,7 +470,7 @@ int main(int argc, char** argv)
 //---------------------------------------------------------------------------------------------------
 //create / load column bias frame
 
-    CCDImage<float> combined_bias_frame;
+    CcdImage<float> combined_bias_frame;
     if (!camconf.simulated_data) {
         if (opts.generate_column_bias_frame) {
             using namespace clean_and_register_subroutines;
@@ -487,7 +487,7 @@ int main(int argc, char** argv)
         } else if (!opts.precalc_col_bias_frame_path.empty()) {
             cout<<"\nLoading precal col bias frame from:  "<< opts.precalc_col_bias_frame_path
                 <<"\n"<<endl;
-            combined_bias_frame=CCDImage<float>(opts.precalc_col_bias_frame_path);
+            combined_bias_frame=CcdImage<float>(opts.precalc_col_bias_frame_path);
             combined_bias_frame.write_to_file(cdi.CCD_outputdir+"loaded_column_bias_frame.fits");
         } else {
             cout<<"\n**** WARNING: No column bias frame supplied, available or generated - column bias will not be corrected *****\n"<<endl;
@@ -505,11 +505,11 @@ int main(int argc, char** argv)
             string path = opts.camconf.get_calibration_info_for_CCD_id(
                               cdi.ccd_id).precal_row_bias_frame_path;
             cout<<"Loading row bias levels from file \""<<path<<"\""<<endl;
-            CCDImage<float> precal_row_bias_frame(path);
+            CcdImage<float> precal_row_bias_frame(path);
             combined_bias_frame.pix += precal_row_bias_frame.pix;
         }
 
-        CCDImage<float> first_debiased(first);
+        CcdImage<float> first_debiased(first);
         cerr<<"Debiasing sample frame...";
         cout<<first_debiased.pix.range()<<" ; "<<combined_bias_frame.pix.range()<<endl;
         first_debiased.pix-=combined_bias_frame.pix;
@@ -526,7 +526,7 @@ int main(int argc, char** argv)
 
 //=========================  Load any relevant guide regions, generate our kernel =========================================
 
-    psf_models::reference_psf kernel;
+    psf_models::ReferencePsf kernel;
 
     PixelRange centroiding_box;
 
@@ -616,23 +616,23 @@ int main(int argc, char** argv)
 
     using namespace single_CCD_filters;
 
-    Sequential_File_Buffer_Filter<> input_filter(frame_vec, opts.n_frames_to_process);
-    Decompress_Filter decompressor;
+    SequentialFileBufferFilter<> input_filter(frame_vec, opts.n_frames_to_process);
+    DecompressFilter decompressor;
 
     pipeline.add_filter(input_filter);
     pipeline.add_filter(decompressor);
 
-    Timestamp_Load_Filter timestamp_loader; //mainly for use with simulated data
+    TimestampLoadFilter timestamp_loader; //mainly for use with simulated data
     if (cdi.extension.find("fits")!=string::npos && first_header.key_exists("FRAMETIM")) {
         pipeline.add_filter(timestamp_loader);
     }
 
-    File_Timestamp_Imprinting_Filter f_timestamper(frame_vec.front(),
+    FileTimestampImprintingFilter f_timestamper(frame_vec.front(),
             camconf.get_calibration_info_for_CCD_id(
                 frame_vec.front().ccd_id).milliseconds_per_frame_exposure);
     if (opts.imprint_file_time_stamp) { pipeline.add_filter(f_timestamper); }
 
-    Frame_Count_Display_Filter count_filter(true);
+    FrameCountDisplayFilter count_filter(true);
     pipeline.add_filter(count_filter);
 
     FrameCropFilter crop_filter(cropped_PixelRange);
@@ -640,12 +640,12 @@ int main(int argc, char** argv)
     BiasDriftTracker t_db_filter(opts.temporal_debiasing_hist_box);
 
     UniformDebias uniform_debias_filter;
-    Frame_Summation zeroed_avg_filter(first.pix.range(), first.CCD_grid.image_outline_);
+    FrameSummation zeroed_avg_filter(first.pix.range(), first.CCD_grid.image_outline_);
 
     BiasFrameSubtractor static_col_db_filter;
     static_col_db_filter.set_bias_frame(combined_bias_frame);
 
-    Frame_Summation debiased_sum_filter(first.pix.range(), first.CCD_grid.image_outline_);
+    FrameSummation debiased_sum_filter(first.pix.range(), first.CCD_grid.image_outline_);
 
 
     if (camconf.simulated_data==false) {
@@ -662,10 +662,10 @@ int main(int argc, char** argv)
     pipeline.add_filter(debiased_sum_filter);
 
 
-    Dynamic_Row_Debias row_db_filt;
-    if (opts.dynamic_row_debiasing_on) { pipeline.add_filter(row_db_filt); }
+    DynamicRowDebias row_db_filt;
+    if (opts.DynamicRowDebiasing_on) { pipeline.add_filter(row_db_filt); }
 
-    Frame_Output_Filter cleaned_output_filter(opts.cleaned_output_folder);
+    FrameOutputFilter cleaned_output_filter(opts.cleaned_output_folder);
     if (opts.output_cleaned_files) { pipeline.add_filter(cleaned_output_filter); }
 
     Histogram14BitBuildFilter cleaned_hist_filter(gain_box, hist_min);
@@ -674,14 +674,14 @@ int main(int argc, char** argv)
     //To do - add a "STOP" limit, where if too many frames have candidates, the filter throws an exception and brings the program to a halt.
     // Otherwise, a threshold too low causes excessive diagnosis output and slowdown.
     // The limit should be implemented as a percentage of the frames processed so far, once say the first 1000 have been done.
-    Cosmic_Ray_Candidate_Detection cosmic_ray_detector(opts.cosmic_ray_candidate_threshold);
+    CosmicRayCandidateDetection cosmic_ray_detector(opts.cosmic_ray_candidate_threshold);
 
     //NB All further cosmic ray detection depends on candidates, so turning this off effectively turns it all
     if (!camconf.simulated_data) {
         pipeline.add_filter(cosmic_ray_detector);
     }
 
-    Cosmic_Ray_Confirmation cosmic_ray_checker(10.0, 6.0);
+    CosmicRayConfirmation cosmic_ray_checker(10.0, 6.0);
     pipeline.add_filter(cosmic_ray_checker);
 
 
@@ -691,20 +691,20 @@ int main(int argc, char** argv)
         opts.use_parabola_fit);
     if (opts.gs_registration_on) { pipeline.add_filter(reg_filter); }
 
-    Region_Centroid centroid_filter(centroiding_box, frame_vec.size());
+    RegionCentroid centroid_filter(centroiding_box, frame_vec.size());
     if (opts.perform_centroiding) { pipeline.add_filter(centroid_filter); }
 
 
 
-    Cosmic_Ray_Diagnosis_Output ray_output_filter(cdi.CCD_outputdir,
+    CosmicRayDiagnosisOutput ray_output_filter(cdi.CCD_outputdir,
             opts.cosmic_ray_diagnostics_output_subfolder);
     pipeline.add_filter(ray_output_filter);
 
-    Frame_Info_Collection_Filter list_collector(frame_vec.size());
+    FrameInfoCollectionFilter list_collector(frame_vec.size());
     pipeline.add_filter(list_collector);
 
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
     pipeline.add_filter(end_filter);
 
 
@@ -728,7 +728,7 @@ int main(int argc, char** argv)
 
 
 //==========================    Process gain information if available ====================================
-    gain_utils::gain_info hist_fit;
+    gain_utils::GainData hist_fit;
     if (opts.build_faint_histogram) {
         cout<<"Fitting gain hist..."<<endl;
 
@@ -779,18 +779,18 @@ int main(int argc, char** argv)
 
 
         if (!camconf.simulated_data) {
-            CCDImage<double> mask = CCDImage<double>(image_cleanup::get_CCD_default_weight_map(
+            CcdImage<double> mask = CcdImage<double>(image_cleanup::get_CCD_default_weight_map(
                                         camconf.get_calibration_info_for_CCD_id(cdi.ccd_id)));
             mask.write_to_file(cdi.dataset_output_base_dir  +"/avgs/" +cdi.out_filestem+"_"+
                                string_utils::itoa(cdi.ccd_id)+"mask.fits");
-            CCDImage<double> dc_zeroed = zeroed_avg_filter.Avg();
+            CcdImage<double> dc_zeroed = zeroed_avg_filter.Avg();
             //        dc_zeroed.add_comment("Run filestem:  "+ cs.in_filestem);
             //        dc_zeroed.set_keyword("CAMERAID", string_utils::itoa(cs.ccd_id));
             dc_zeroed.pix *= mask.pix;
 
             dc_zeroed.write_to_file(avgs_filestem   + "zeroed_avg.fits", additional_hdr_info);
 
-            CCDImage<double> debiased_avg;
+            CcdImage<double> debiased_avg;
             if (camconf.simulated_data==false) { debiased_avg = debiased_sum_filter.Avg(); }
             else { debiased_avg = dc_zeroed; }
 
@@ -803,17 +803,17 @@ int main(int argc, char** argv)
                                        additional_hdr_info);
 
 
-            CCDImage<double> normed_avg=debiased_avg;
+            CcdImage<double> normed_avg=debiased_avg;
             if (opts.build_faint_histogram) {
                 gain_utils::normalise_CCD_with_uniform_gain(normed_avg, hist_fit);
                 normed_avg.write_to_file(avgs_filestem + debias_method_str+"_normed.fits");
 
-                const CCD_calibration_info& ccd_props= camconf.get_calibration_info_for_CCD_id(
+                const CcdCalibrationInfo& ccd_props= camconf.get_calibration_info_for_CCD_id(
                         cdi.ccd_id);
                 if (ccd_props.dark_current_frames_available) {
                     cout<<"Subtracting dark current calibration frame: \""<<ccd_props.normalised_DC_frame_path<<"\""<<endl;
-                    CCDImage<double> dark_current_frame =
-                        CCDImage<double>::load_from_unknown_filetype(ccd_props.normalised_DC_frame_path);
+                    CcdImage<double> dark_current_frame =
+                        CcdImage<double>::load_from_unknown_filetype(ccd_props.normalised_DC_frame_path);
                     //do dark current subtraction
                     normed_avg.pix -= dark_current_frame.pix;
                     normed_avg.write_to_file(avgs_filestem +debias_method_str+ "_normed_DC_subtracted.fits",
@@ -821,7 +821,7 @@ int main(int argc, char** argv)
                 }
             }
         } else if (camconf.simulated_data) {
-            CCDImage<double> sim_avg = debiased_sum_filter.Avg();
+            CcdImage<double> sim_avg = debiased_sum_filter.Avg();
             sim_avg.write_to_file(avgs_filestem+"sim_avg.fits", additional_hdr_info);
         }
 

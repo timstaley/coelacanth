@@ -19,17 +19,17 @@ namespace coela {
 namespace psf_models {
 
 //==================================================================================================================
-vector<double> reference_psf::get_unmasked_ref_psf_pixel_values() const
+vector<double> ReferencePsf::get_unmasked_ref_psf_pixel_values() const
 {
     return pixel_array_routines::get_region_unmasked_pixels_vector(psf_image.pix,
             mask.pix, psf_image.pix.range());
 }
 //==================================================================================================================
 
-reference_psf generate_psf(const psf_model_interface& psf,
+ReferencePsf generate_psf(const PsfModelInterface& psf,
                            const PixelRange& output_frame_shape,
-                           const CCD_Position& output_CCD_region_low_corner,
-                           const CCD_Position& psf_centre_point,
+                           const CcdPosition& output_CCD_region_low_corner,
+                           const CcdPosition& psf_centre_point,
                            const double desired_pixel_scale_relative_to_CCD_pix,
                            const double oversampling,
                            const bool radius_limited,
@@ -48,7 +48,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
     double max_CCD_generation_radius = max_CCD_radius_reqd + 1.0;
     //we increase the limit by a full CCD pixel, in case the centre of a sub-pixel is outside the radius, but the centre of the output pixel it contributes to is not.
 
-    CCDImage<double> construction_image;
+    CcdImage<double> construction_image;
     construction_image.pix = PixelArray2d<double>(ceil(output_frame_shape.x_dim() *
                              oversampling),
                              ceil(output_frame_shape.y_dim() * oversampling),
@@ -68,7 +68,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
         for (PixelIterator img_it(construction_image.pix.range()); img_it!=img_it.end; ++img_it) {
             PixelPosition pixel_centre=PixelPosition::centre_of_pixel(img_it);
             PixelShift pixel_offset_frm_coords(pixel_centre - construction_centre);
-            CCD_PixelShift pixel_offset_CCD_coords(
+            CcdPixelShift pixel_offset_CCD_coords(
                 pixel_offset_frm_coords.x*construction_CCD_scale    ,
                 pixel_offset_frm_coords.y*construction_CCD_scale);
             construction_image.pix(img_it) = psf(pixel_offset_CCD_coords);
@@ -77,7 +77,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
         for (PixelIterator img_it(construction_image.pix.range()); img_it!=img_it.end; ++img_it) {
             PixelPosition pixel_centre=PixelPosition::centre_of_pixel(img_it);
             PixelShift pixel_offset_frm_coords(pixel_centre - construction_centre);
-            CCD_PixelShift pixel_offset_CCD_coords(
+            CcdPixelShift pixel_offset_CCD_coords(
                 pixel_offset_frm_coords.x*construction_CCD_scale    ,
                 pixel_offset_frm_coords.y*construction_CCD_scale);
             if ((pixel_offset_CCD_coords.length()) < max_CCD_generation_radius) {
@@ -87,7 +87,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
 
     }
 
-    reference_psf output_psf;
+    ReferencePsf output_psf;
     if (oversampling!=1.0) {
         output_psf.psf_image = image_utils::bin_image(construction_image, oversampling);
         output_psf.psf_image.pix /= (oversampling*oversampling);
@@ -97,7 +97,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
     assert(output_psf.psf_image.CCD_grid.pixel_width_==
            desired_pixel_scale_relative_to_CCD_pix); //sanity check
 
-    output_psf.mask=CCDImage<double>(output_psf.psf_image);
+    output_psf.mask=CcdImage<double>(output_psf.psf_image);
     output_psf.mask.pix.assign(1.0);//initialised to same size, all=1.0; (unmasked)
 
     output_psf.exact_centre = output_psf.psf_image.CCD_grid.corresponding_pixel_Position(
@@ -107,7 +107,7 @@ reference_psf generate_psf(const psf_model_interface& psf,
     return output_psf;
 }
 
-reference_psf generate_centred_psf(const axisymmetric_psf_model_interface& psf_func,
+ReferencePsf generate_centred_psf(const AxisymmetricPsfModelInterface& psf_func,
                                    const double outer_radius_in_CCD_pix,
                                    const double desired_pixel_scale_relative_to_CCD_pix,
                                    const int oversampling_factor
@@ -121,19 +121,19 @@ reference_psf generate_centred_psf(const axisymmetric_psf_model_interface& psf_f
     PixelRange output_outline(1,1,output_size,output_size);
 
 //    ref_psf.psf_image = image<double>(output_size, output_size, 0.0);
-//    ref_psf.psf_image.initialize_CCD_grid_to_specific_offset_and_scale(CCD_Position(0,0) , desired_pixel_scale_relative_to_CCD_pix);
+//    ref_psf.psf_image.initialize_CCD_grid_to_specific_offset_and_scale(CcdPosition(0,0) , desired_pixel_scale_relative_to_CCD_pix);
 
     //NB output size is always odd, so this places the PSF centre at a pixel centre.
-    CCD_Position psf_centre =
-        CCD_Position(output_size/2.0 * desired_pixel_scale_relative_to_CCD_pix,
+    CcdPosition psf_centre =
+        CcdPosition(output_size/2.0 * desired_pixel_scale_relative_to_CCD_pix,
                      output_size/2.0 * desired_pixel_scale_relative_to_CCD_pix) ;
 
 
-    reference_psf ref_psf=
+    ReferencePsf ref_psf=
         generate_psf(
             psf_func,
             output_outline,
-            CCD_Position(0,0),
+            CcdPosition(0,0),
             psf_centre,
             desired_pixel_scale_relative_to_CCD_pix,
             oversampling_factor,

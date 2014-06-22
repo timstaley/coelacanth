@@ -45,8 +45,8 @@ double cubic_resample_third_quarter_point(const vector<double>& v)
     return (-7.0*v[3] + 105.0*v[2] + 35.0*v[1] -5.0*v[0])/128.0 ;
 }
 
-CCDImage<double> initialise_bmp_for_resampling(
-    const CCDImage<double>& input_bmp,
+CcdImage<double> initialise_bmp_for_resampling(
+    const CcdImage<double>& input_bmp,
     const double pixscale_factor)
 {
 
@@ -76,7 +76,7 @@ CCDImage<double> initialise_bmp_for_resampling(
     */
 
     int zoom_factor = 1/pixscale_factor;
-    CCDImage<double> output_bmp;
+    CcdImage<double> output_bmp;
     output_bmp.pix = PixelArray2d<double>(zoom_factor*input_bmp.pix.range().x_dim(),
                                           zoom_factor*input_bmp.pix.range().y_dim(),
                                           0.0);
@@ -84,7 +84,7 @@ CCDImage<double> initialise_bmp_for_resampling(
     // in the reference frame of the input image:
     PixelPosition lower_bound(-0.5 +pixscale_factor/2.0, -0.5 +pixscale_factor/2.0);
     //Convert to the CCD reference frame:
-    CCD_Position output_CCD_region_corner(
+    CcdPosition output_CCD_region_corner(
         input_bmp.CCD_grid.corresponding_grid_Position(lower_bound));
 
     //And initialise accordingly
@@ -102,12 +102,12 @@ CCDImage<double> initialise_bmp_for_resampling(
 //            PixelPosition lower_bound()
 //        }
 
-CCDImage<double> bicubic_resample_2x(const CCDImage<double>& input_bmp)
+CcdImage<double> bicubic_resample_2x(const CcdImage<double>& input_bmp)
 {
     const size_t in_sx(input_bmp.pix.range().x_dim()), in_sy(input_bmp.pix.range().y_dim());
     const double pixscale_factor = 0.5;
     size_t resample_factor = 1.0/pixscale_factor;
-    CCDImage<double> output_bmp(initialise_bmp_for_resampling(input_bmp, pixscale_factor));
+    CcdImage<double> output_bmp(initialise_bmp_for_resampling(input_bmp, pixscale_factor));
 
     //Already sampled:
     for (size_t y_in = 1, y_out=resample_factor; y_in<=in_sy;
@@ -186,12 +186,12 @@ CCDImage<double> bicubic_resample_2x(const CCDImage<double>& input_bmp)
     return output_bmp;
 }
 
-CCDImage<double> bicubic_resample_4x(const CCDImage<double>& input_bmp)
+CcdImage<double> bicubic_resample_4x(const CcdImage<double>& input_bmp)
 {
     //for resample factor R, indexing from 1 to N, y(out) = Rx - (R-1) = R(x-1) +1
     const size_t in_sx(input_bmp.pix.range().x_dim()), in_sy(input_bmp.pix.range().y_dim());
     const double pixscale_factor = 0.25;
-    CCDImage<double> output_bmp(initialise_bmp_for_resampling(input_bmp, pixscale_factor));
+    CcdImage<double> output_bmp(initialise_bmp_for_resampling(input_bmp, pixscale_factor));
 
     size_t resample_factor = 1.0/pixscale_factor;
     //Already sampled:
@@ -294,9 +294,9 @@ CCDImage<double> bicubic_resample_4x(const CCDImage<double>& input_bmp)
 //i->j=Ri. (so x = i-0.5 -> j = Ri   so;  j = R(x + 0.5)  so x = j/R - 0.5
 
 template<typename input_datatype>
-CCDImage<double> bicubic_resample_non_edge_region(
-    const CCDImage<input_datatype>& input_bmp,
-    const CCD_BoxRegion ccd_roi,    //roi: Region of interest
+CcdImage<double> bicubic_resample_non_edge_region(
+    const CcdImage<input_datatype>& input_bmp,
+    const CcdBoxRegion ccd_roi,    //roi: Region of interest
     const double resample_factor)
 {
     PixelRange box =
@@ -310,9 +310,9 @@ CCDImage<double> bicubic_resample_non_edge_region(
     if (resample_factor!=2.0 && resample_factor!=4.0) { throw domain_error("Only resample factors implemented are 2.0 and 4.0"); }
 
     PixelRange padded_box(box.low.x -1, box.low.y-1, box.high.x+1, box.high.y+1);
-    CCDImage<double> padded_bmp = CCDImage<double>(CCDImage<input_datatype>::sub_image(
+    CcdImage<double> padded_bmp = CcdImage<double>(CcdImage<input_datatype>::sub_image(
                                       input_bmp, padded_box));
-    CCDImage<double> padded_resample;
+    CcdImage<double> padded_resample;
     if (resample_factor==2.0) { padded_resample = bicubic_resample_2x(padded_bmp); }
     else if (resample_factor==4.0) { padded_resample = bicubic_resample_4x(padded_bmp); }
     else { throw logic_error("Resample factor not supported"); }
@@ -327,26 +327,26 @@ CCDImage<double> bicubic_resample_non_edge_region(
         input_bmp.CCD_grid.pixel_width_/2.0 -
         padded_resample.CCD_grid.pixel_width_/2.0;
 
-    CCD_PixelShift diagonal_shrink(
+    CcdPixelShift diagonal_shrink(
         horizontal_distance_from_corner_of_old_pixel_to_corner_of_shrunk_pixel,
         horizontal_distance_from_corner_of_old_pixel_to_corner_of_shrunk_pixel);
 
-    CCD_BoxRegion ccd_roi_with_new_pixel_sizing(ccd_roi.low + diagonal_shrink,
+    CcdBoxRegion ccd_roi_with_new_pixel_sizing(ccd_roi.low + diagonal_shrink,
             ccd_roi.high - diagonal_shrink);
 
-    return CCDImage<double>::sub_image(padded_resample, ccd_roi_with_new_pixel_sizing);
+    return CcdImage<double>::sub_image(padded_resample, ccd_roi_with_new_pixel_sizing);
 }
 
 template
-CCDImage<double> bicubic_resample_non_edge_region(const CCDImage<float>& input_bmp,
-        const CCD_BoxRegion ccd_roi, const double resample_factor);
+CcdImage<double> bicubic_resample_non_edge_region(const CcdImage<float>& input_bmp,
+        const CcdBoxRegion ccd_roi, const double resample_factor);
 template
-CCDImage<double> bicubic_resample_non_edge_region(const CCDImage<double>& input_bmp,
-        const CCD_BoxRegion ccd_roi, const double resample_factor);
+CcdImage<double> bicubic_resample_non_edge_region(const CcdImage<double>& input_bmp,
+        const CcdBoxRegion ccd_roi, const double resample_factor);
 
-CCDImage<double> bin_image(const CCDImage<double>& input_image, const int bin_pixel_width)
+CcdImage<double> bin_image(const CcdImage<double>& input_image, const int bin_pixel_width)
 {
-    CCDImage<double> output;
+    CcdImage<double> output;
     output.pix = pixel_array_routines::bin_pixel_array(input_image.pix,
                  bin_pixel_width);
 

@@ -24,11 +24,11 @@ struct DrizzleSettings;
 //=========================================================================================
 /// struct frame_info:
 /// Holds information about a single CCD exposure.
-/// Inherits frame location information via "file_info" struct.
+/// Inherits frame location information via "FileInfo" struct.
 
-struct FrameInfo: public file_info {
+struct FrameInfo: public FileInfo {
     FrameInfo(): quality_percentile_rank(0.0), bias_pedestal(-42.f) {}
-    FrameInfo(const file_info& basic): file_info(basic), quality_percentile_rank(0.0),
+    FrameInfo(const FileInfo& basic): FileInfo(basic), quality_percentile_rank(0.0),
         bias_pedestal(-42.f) {};
 
     static std::list<FrameInfo> get_frames_list(const string& relative_path,
@@ -53,9 +53,9 @@ struct FrameInfo: public file_info {
 
     //----------------------------------------------------------------------------------/
     //Data members:
-    std::vector< frame_registration::gs_lock<CCD_Position> > guide_star_estimates;
+    std::vector< frame_registration::GuideStarLock<CcdPosition> > guide_star_estimates;
     double quality_percentile_rank;
-    std::vector<CCD_Position> confirmed_cosmic_rays;
+    std::vector<CcdPosition> confirmed_cosmic_rays;
     size_t cube_FITS_z_index;
     float bias_pedestal;
     //----------------------------------------------------------------------------------/
@@ -86,7 +86,7 @@ struct FrameInfo: public file_info {
                                        const std::vector<FrameInfo>&);
     static std::vector<FrameInfo>& shift_frame_id_numbers(int shift, std::vector<FrameInfo>&);
 
-    static frame_registration::gs_lock<CCD_Position> mean_guide_star_estimate(
+    static frame_registration::GuideStarLock<CcdPosition> mean_guide_star_estimate(
         const std::vector<FrameInfo>&,
         int gs_index=0);
 
@@ -102,7 +102,7 @@ struct FrameInfo: public file_info {
     static void set_blank_guide_star_positions(std::vector<FrameInfo>&);
 
 private:
-    static std::list<FrameInfo> convert_file_list_to_frame_list(const std::list<file_info>&
+    static std::list<FrameInfo> convert_file_list_to_frame_list(const std::list<FileInfo>&
             files); ///<Initialise the camera_id depending on the folder Position
 };
 std::ostream& operator<<(std::ostream& os, const FrameInfo& frm);

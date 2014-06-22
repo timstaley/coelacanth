@@ -18,7 +18,7 @@
 #include <coela_core/src/cartesian_coords.h>
 using namespace std;
 namespace coela {
-using frame_registration::gs_lock;
+using frame_registration::GuideStarLock;
 using namespace string_utils;
 
 void FrameInfo::write_list_to_file(const list<FrameInfo>& frames, string filename)
@@ -86,7 +86,7 @@ FrameInfo FrameInfo::load_from_formatted_text(const string& formatted_text)
 
     if (segments.front()!=string("0")) {
         ss.str(segments.front());
-        gs_lock<CCD_Position> gl;
+        GuideStarLock<CcdPosition> gl;
         while (ss>>gl) { frm.guide_star_estimates.push_back(gl); }
     }
     ss.clear();
@@ -106,7 +106,7 @@ FrameInfo FrameInfo::load_from_formatted_text(const string& formatted_text)
     ss.clear();
     if (segments.back() !=string("0")) {
         ss.str(segments.back());
-        CCD_Position ray;
+        CcdPosition ray;
         while (ss>>ray) { frm.confirmed_cosmic_rays.push_back(ray); }
     }
     return frm;
@@ -164,11 +164,11 @@ list<FrameInfo> FrameInfo::get_frames_list(const string& relative_path,
         const string& index_output_dir)
 {
     if (!boost::filesystem::is_directory(relative_path)) {throw runtime_error("frame_info::get_frames_list: Dir: \""+relative_path+"\" does not exist"); }
-    list<file_info> files;
+    list<FileInfo> files;
     if (extension.find("lcz")!=string::npos) {
         files = lcz_utils::get_lcz_subfile_list(relative_path, index_output_dir);
         lcz_utils::sanitise_list(files);
-    } else { files=file_info::get_image_file_list(relative_path, filestem, CCD_id, extension); }
+    } else { files=FileInfo::get_image_file_list(relative_path, filestem, CCD_id, extension); }
     list<FrameInfo> frames(convert_file_list_to_frame_list(files));
     frames.sort(FrameInfo::frame_id_predicate);
     return frames;
@@ -212,10 +212,10 @@ std::vector<FrameInfo> FrameInfo::merge_frame_vecs(
 //        if (frames1.size()!=frames2.size() ) {throw runtime_error("\nCannot merge lists of different sizes\n");}
     vector<FrameInfo> frames1(input1), frames2(input2);
 
-    sort(frames1.begin(), frames1.end(), file_info::subfile_number_predicate);
-    sort(frames2.begin(), frames2.end(), file_info::subfile_number_predicate);
-//        frames1.sort(file_info::subfile_number_predicate);
-//        frames2.sort(file_info::subfile_number_predicate);
+    sort(frames1.begin(), frames1.end(), FileInfo::subfile_number_predicate);
+    sort(frames2.begin(), frames2.end(), FileInfo::subfile_number_predicate);
+//        frames1.sort(FileInfo::subfile_number_predicate);
+//        frames2.sort(FileInfo::subfile_number_predicate);
 //        size_t counter=0;
 //        cout <<"\r"<<counter<<"...         ";  cout.flush();
     for (vector<FrameInfo>::iterator it1(frames1.begin()), it2(frames2.begin());
@@ -246,10 +246,10 @@ std::list<FrameInfo> FrameInfo::split_last_guide_star_into_separate_list(
 
 
 
-list<FrameInfo> FrameInfo::convert_file_list_to_frame_list(const list<file_info>& files)
+list<FrameInfo> FrameInfo::convert_file_list_to_frame_list(const list<FileInfo>& files)
 {
     list<FrameInfo> frames;
-    for (list<file_info>::const_iterator it(files.begin()); it!=files.end(); ++it) {
+    for (list<FileInfo>::const_iterator it(files.begin()); it!=files.end(); ++it) {
         FrameInfo current_frame(*it);
         current_frame.bias_pedestal=0.0;
 
@@ -292,7 +292,7 @@ bool FrameInfo::first_star_signal_predicate(const FrameInfo& first,
 bool FrameInfo::first_star_location_vector_length_predicate(const FrameInfo& first,
         const FrameInfo& second)
 {
-    CCD_Position origin(0.0, 0.0);
+    CcdPosition origin(0.0, 0.0);
     return (coord_distance_squared(origin, (first.guide_star_estimates.front().Position))
             < coord_distance_squared(origin, second.guide_star_estimates.front().Position));
 }
@@ -329,7 +329,7 @@ void FrameInfo::add_percentile_rankings_based_on_first_star(std::vector<FrameInf
         frms[i].quality_percentile_rank  = (double)(frms.size() - i) /   frms.size();
     }
     //Rearrange list back into chronological order so we can perform correlation on multiple lists
-    sort(frms.begin(), frms.end(), file_info::frame_id_predicate);
+    sort(frms.begin(), frms.end(), FileInfo::frame_id_predicate);
 }
 
 void FrameInfo::set_bias_pedestal_estimates(std::vector<FrameInfo>& frms,
@@ -357,20 +357,20 @@ vector<FrameInfo>& FrameInfo::shift_frame_id_numbers(int shift,
     return frms;
 }
 
-gs_lock<CCD_Position> FrameInfo::mean_guide_star_estimate(const std::vector<FrameInfo>&
+GuideStarLock<CcdPosition> FrameInfo::mean_guide_star_estimate(const std::vector<FrameInfo>&
         frm_vec,
         int gs_index)
 {
-    CCD_PixelShift sum_shift(0.0,0.0);
+    CcdPixelShift sum_shift(0.0,0.0);
     double sum_qual=0.0;
     for (size_t frm=0; frm!=frm_vec.size(); ++frm) {
         sum_shift += (frm_vec[frm].guide_star_estimates[gs_index].Position -
-                      CCD_Position::origin);
+                      CcdPosition::origin);
         sum_qual += frm_vec[frm].guide_star_estimates[gs_index].signal;
     }
     sum_shift/=frm_vec.size();
     sum_qual/=frm_vec.size();
-    return gs_lock<CCD_Position>(sum_shift+CCD_Position::origin, sum_qual);
+    return GuideStarLock<CcdPosition>(sum_shift+CcdPosition::origin, sum_qual);
 }
 
 std::vector<double> FrameInfo::pull_quality_estimates_for_gs(
@@ -422,14 +422,14 @@ std::vector<FrameInfo> FrameInfo::combine_guide_star_estimates_with_weights(
     for (size_t i=0; i!=output.size(); ++i) {
         FrameInfo& frm = output[i];
         double sum_qual=0.0;
-        CCD_PixelShift sum_position(0,0);
+        CcdPixelShift sum_position(0,0);
         for (size_t star_num=0; star_num!=frm.guide_star_estimates.size();
                 ++star_num) {
             sum_qual +=
                 frm.guide_star_estimates[star_num].signal *
                 gs_weights[star_num];
             sum_position +=
-                (frm.guide_star_estimates[star_num].Position - CCD_Position::origin) *
+                (frm.guide_star_estimates[star_num].Position - CcdPosition::origin) *
                 gs_weights[star_num];
         }
         sum_qual/=weight_sum;
@@ -437,7 +437,7 @@ std::vector<FrameInfo> FrameInfo::combine_guide_star_estimates_with_weights(
 
         frm.guide_star_estimates.clear();
         frm.guide_star_estimates.push_back(
-            gs_lock<CCD_Position>(sum_position +CCD_Position::origin, sum_qual));
+            GuideStarLock<CcdPosition>(sum_position +CcdPosition::origin, sum_qual));
     }
     return output;
 }
@@ -447,7 +447,7 @@ void FrameInfo::set_blank_guide_star_positions(std::vector<FrameInfo>& frms)
 {
     for (size_t i=0; i!=frms.size(); ++i) {
         frms[i].guide_star_estimates.clear();
-        frms[i].guide_star_estimates.push_back(gs_lock<CCD_Position>(CCD_Position(0,0)));
+        frms[i].guide_star_estimates.push_back(GuideStarLock<CcdPosition>(CcdPosition(0,0)));
     }
 
 }

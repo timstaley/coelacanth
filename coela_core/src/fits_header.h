@@ -18,7 +18,7 @@
 namespace coela {
 
 //fwd declaration
-struct file_info;
+struct FileInfo;
 
 //=======================================================================================
 ///Fits header table:
@@ -66,7 +66,7 @@ public:
 private:
     void Position_stream_and_load(std::istream&, const size_t hdr_begin_byte_offset);
     OrderedMap entry_table;
-    string make_keyword_line(const key_value_comment&) const;
+    string make_keyword_line(const KeyValueComment&) const;
     void load_from_string_vec(const vector<string>& header_text);
 };
 

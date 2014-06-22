@@ -16,31 +16,31 @@ namespace Mn2_models {
 //==================================================================================
 //interface for stateless PSF model functions for generation with parameters varying
 
-class minuit_model_interface {
+class MinuitModelInterface {
 public:
-    virtual double operator()(const CCD_PixelShift& offset_from_psf_centre,
+    virtual double operator()(const CcdPixelShift& offset_from_psf_centre,
                               const std::vector<double>& psf_params) const = 0;
 };
 
 //==================================================================================
 //Takes a reference of a minuit psf model, and the current set of params,
 //And wraps them together for compatibility with psf_model_base (so we can re-use psf generation code)
-class model_params_wrapper: public psf_models::psf_model_interface {
+class ModelParamsWrapper: public psf_models::PsfModelInterface {
 public:
-    model_params_wrapper(const minuit_model_interface& parameterised_model,
+    ModelParamsWrapper(const MinuitModelInterface& parameterised_model,
                          const std::vector<double>& psf_params);
 
     //Override the psf_model_base function:
-    double operator()(const CCD_PixelShift& offset_from_psf_centre) const;
+    double operator()(const CcdPixelShift& offset_from_psf_centre) const;
 private:
-    const minuit_model_interface& model_ref;
+    const MinuitModelInterface& model_ref;
     const std::vector<double> pars_copy;
 };
 
 //==================================================================================
 struct PositionFit {
-    CCD_Position centre;
-    CCD_PixelShift error_estimate;
+    CcdPosition centre;
+    CcdPixelShift error_estimate;
 
     static void set_MnPars(const PositionFit &,
                            ROOT::Minuit2::MnUserParameters * ,
@@ -52,25 +52,25 @@ private:
     const static std::string centre_x_suffix, centre_y_suffix;
 };
 
-template<class PSF_Type>
-struct PSF_Fit {
-    PSF_Type model;
+template<class PsfType>
+struct PsfFit {
+    PsfType model;
     PositionFit Position;
 };
 
 //==================================================================================
 
-class gaussian_psf: public minuit_model_interface {
+class GaussianPsf: public MinuitModelInterface {
 public:
-    double operator()(const CCD_PixelShift& offset_from_psf_centre,
+    double operator()(const CcdPixelShift& offset_from_psf_centre,
                       const std::vector<double>& psf_params) const;
 
-    static void set_MnPars_from_PSF_Fit(
-        const PSF_Fit<psf_models::gaussian_psf_model> initial_fit ,
+    static void set_MnPars_from_PsfFit(
+        const PsfFit<psf_models::GaussianPsfModel> initial_fit ,
         ROOT::Minuit2::MnUserParameters * ,
         const std::string& prefix);
 
-    static PSF_Fit<psf_models::gaussian_psf_model> pull_PSF_Fit_from_MnPars(
+    static PsfFit<psf_models::GaussianPsfModel> pull_PsfFit_from_MnPars(
         const ROOT::Minuit2::MnUserParameters& fitted_pars,
         const std::string& prefix);
 
@@ -81,8 +81,8 @@ private:
 
 
 
-}//end namespace coela::psf_fitting::minuit_psf_models
-} //end namespace coela::psf_fitting
+}//end namespace coela::PsfFitting::minuit_psf_models
+} //end namespace coela::PsfFitting
 }//end namespace coela
 
 #endif  /* MINUIT_PSF_MODELS_H */

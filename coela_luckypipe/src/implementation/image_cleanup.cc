@@ -122,16 +122,16 @@ template double determine_histogram_bias_pedestal_via_thresholded_centroid(
     const HistogramContainer14bit& hist,
     const double threshold_factor);
 
-CCDImage<float> get_CCD_default_weight_map(const CCD_calibration_info& ccd_inf)
+CcdImage<float> get_CCD_default_weight_map(const CcdCalibrationInfo& ccd_inf)
 {
-    CCDImage<float> default_weight_map;
+    CcdImage<float> default_weight_map;
 
     default_weight_map.pix = PixelArray2d<float>(ccd_inf.cropped_PixelRange.x_dim(),
                              ccd_inf.cropped_PixelRange.y_dim(), 1.0);
 
     default_weight_map.initialize_CCD_grid_to_specific_region(ccd_inf.crop_region);
 
-    vector<CCD_BoxRegion> bad_regions = ccd_inf.get_bad_detector_regions();
+    vector<CcdBoxRegion> bad_regions = ccd_inf.get_bad_detector_regions();
 
     for (size_t rgn_num=0; rgn_num!=bad_regions.size(); ++rgn_num) {
         PixelRange bad_box =

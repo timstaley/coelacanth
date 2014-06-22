@@ -97,7 +97,7 @@ list<DrizzleInputGroup> get_drizzle_groups(const ProgramOptionSet& opts) {
     index_off.second *= -1.0;
   }
 
-  list<file_info> input_files = file_info::get_image_file_list(
+  list<FileInfo> input_files = FileInfo::get_image_file_list(
       opts.input_directory, "", 0, ".fits");
 
 //  cout << "Files:" << endl;

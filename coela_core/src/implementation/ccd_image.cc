@@ -9,10 +9,10 @@ const double error_margin = 1e-6;
 //=========================================================================================================
 
 template<typename T>
-CCDImage<T>::CCDImage() {}
+CcdImage<T>::CcdImage() {}
 
 template<typename T>
-CCDImage<T>::CCDImage(const std::string& filename, const size_t header_offset)
+CcdImage<T>::CcdImage(const std::string& filename, const size_t header_offset)
 {
     std::ifstream infile(filename.c_str(), std::ios::binary);
     if (!infile.is_open()) { throw std::runtime_error(filename+" won't open"); }
@@ -23,7 +23,7 @@ CCDImage<T>::CCDImage(const std::string& filename, const size_t header_offset)
 
 template<typename T>
 template<typename U>
-CCDImage<T>::CCDImage(const CCDImage<U>& rhs):
+CcdImage<T>::CcdImage(const CcdImage<U>& rhs):
     pix(rhs.pix),
     CCD_grid(rhs.CCD_grid) {}
 
@@ -37,23 +37,23 @@ CCDImage<T>::CCDImage(const CCDImage<U>& rhs):
 //        mosaic_grid_(rhs.mosaic_grid_)
 //{}
 
-template CCDImage<double>::CCDImage(const CCDImage<int >& rhs);
-template CCDImage<double>::CCDImage(const CCDImage<unsigned >& rhs);
-template CCDImage<double>::CCDImage(const CCDImage<float>& rhs);
-template CCDImage<float>::CCDImage(const CCDImage<double>& rhs);
-template CCDImage<float>::CCDImage(const CCDImage<int >& rhs);
+template CcdImage<double>::CcdImage(const CcdImage<int >& rhs);
+template CcdImage<double>::CcdImage(const CcdImage<unsigned >& rhs);
+template CcdImage<double>::CcdImage(const CcdImage<float>& rhs);
+template CcdImage<float>::CcdImage(const CcdImage<double>& rhs);
+template CcdImage<float>::CcdImage(const CcdImage<int >& rhs);
 
 template <>
-CCDImage<double> CCDImage<double>::load_from_unknown_filetype(
+CcdImage<double> CcdImage<double>::load_from_unknown_filetype(
     const std::string& filename,
     const size_t header_begin_offset_in_bytes)
 {
     FitsHeader fht(filename, header_begin_offset_in_bytes);
     if (fht.FITS_imagetype()==fits_header_conventions::DOUBLEIMG) {
-        return CCDImage<double>(filename, header_begin_offset_in_bytes);
+        return CcdImage<double>(filename, header_begin_offset_in_bytes);
     }
     if (fht.FITS_imagetype()==fits_header_conventions::FLOATIMG) {
-        return CCDImage<double>(CCDImage<float>(filename,header_begin_offset_in_bytes));
+        return CcdImage<double>(CcdImage<float>(filename,header_begin_offset_in_bytes));
     }
 
     throw std::logic_error("Image<double>::load_image_from_unknown_filetype - "
@@ -61,10 +61,10 @@ CCDImage<double> CCDImage<double>::load_from_unknown_filetype(
 }
 
 template<typename T>
-CCDImage<T> CCDImage<T>::load_from_cube_FITS_file(const std::string& filename,
+CcdImage<T> CcdImage<T>::load_from_cube_FITS_file(const std::string& filename,
         const size_t z_index)
 {
-    CCDImage img;
+    CcdImage img;
     std::ifstream infile(filename.c_str(), std::ios::binary);
     if (!infile.is_open()) { throw std::runtime_error(filename+" won't open"); }
     size_t header_offset =0;
@@ -76,13 +76,13 @@ CCDImage<T> CCDImage<T>::load_from_cube_FITS_file(const std::string& filename,
 }
 
 template<typename T>
-CCDImage<T> CCDImage<T>::load_image_from_buffered_data(
+CcdImage<T> CcdImage<T>::load_image_from_buffered_data(
     const FileBuffer& buf,
     const FitsHeader& preloaded_fht,
     const size_t data_begin_byte_offset)
 {
 
-    CCDImage img;
+    CcdImage img;
     img.CCD_grid.load_from_fht(preloaded_fht);
     img.pix.hdr = PixelArray2dHeader(preloaded_fht);
     img.pix.load_data_from_buffer(buf, data_begin_byte_offset,
@@ -110,28 +110,28 @@ CCDImage<T> CCDImage<T>::load_image_from_buffered_data(
 //}
 
 template<typename T>
-CCDImage<T> CCDImage<T>::sub_image(const CCDImage& full_img, const CCD_BoxRegion& img_rgn)
+CcdImage<T> CcdImage<T>::sub_image(const CcdImage& full_img, const CcdBoxRegion& img_rgn)
 {
-    return CCDImage::sub_image(full_img,
+    return CcdImage::sub_image(full_img,
                                full_img.CCD_grid.corresponding_pixel_region(img_rgn));
 }
 
 template<typename T>
-CCDImage<T> CCDImage<T>::sub_image(const CCDImage<T>& full_img,
+CcdImage<T> CcdImage<T>::sub_image(const CcdImage<T>& full_img,
                                    const PixelBoxRegion& img_rgn)
 {
-    return CCDImage::sub_image(full_img, img_rgn.bounded_pixels());
+    return CcdImage::sub_image(full_img, img_rgn.bounded_pixels());
 }
 
 template<typename T>
-CCDImage<T> CCDImage<T>::sub_image(const CCDImage<T>& full_img, const PixelRange& img_rgn)
+CcdImage<T> CcdImage<T>::sub_image(const CcdImage<T>& full_img, const PixelRange& img_rgn)
 {
-    CCDImage sub_img;
+    CcdImage sub_img;
     sub_img.pix = (PixelArray2d<T>::sub_array(full_img.pix, img_rgn));
 
     if (full_img.CCD_grid.is_initialized()) {
         sub_img.CCD_grid =
-            ImageGrid<coordinate_types::CCD> (
+            ImageGrid<coordinate_types::ccd> (
                 full_img.CCD_grid.corresponding_grid_region(PixelBoxRegion::pixel_box_outline(img_rgn)),
                 full_img.CCD_grid.pixel_width_
             );
@@ -151,7 +151,7 @@ CCDImage<T> CCDImage<T>::sub_image(const CCDImage<T>& full_img, const PixelRange
 }
 
 template<typename T>
-void CCDImage<T>::write_to_file(const std::string& filename,
+void CcdImage<T>::write_to_file(const std::string& filename,
                                 FitsHeader fht,
                                 const ArrayCompressionInfo aci) const
 {
@@ -169,7 +169,7 @@ void CCDImage<T>::write_to_file(const std::string& filename,
 
 
 template<typename T>
-void CCDImage<T>::write_header_to_fht(FitsHeader& fht,
+void CcdImage<T>::write_header_to_fht(FitsHeader& fht,
                                       const ArrayCompressionInfo aci) const
 {
     pix.write_header_to_fht(fht, aci);
@@ -183,14 +183,14 @@ void CCDImage<T>::write_header_to_fht(FitsHeader& fht,
 }
 
 template<typename T>
-void CCDImage<T>::write_data_to_stream(std::ostream& os,
+void CcdImage<T>::write_data_to_stream(std::ostream& os,
                                        const ArrayCompressionInfo& aci) const
 {
     pix.write_data_to_stream(os, aci);
 }
 
 template<typename T>
-void CCDImage<T>::load_from_stream(const FitsHeader& preloaded_fht,
+void CcdImage<T>::load_from_stream(const FitsHeader& preloaded_fht,
                                    std::istream& is, const size_t header_offset)
 {
     pix.hdr = PixelArray2dHeader(preloaded_fht);
@@ -201,7 +201,7 @@ void CCDImage<T>::load_from_stream(const FitsHeader& preloaded_fht,
 }
 
 template<typename T>
-void CCDImage<T>::load_from_cube_FITS_stream(const FitsHeader& preloaded_fht,
+void CcdImage<T>::load_from_cube_FITS_stream(const FitsHeader& preloaded_fht,
         std::istream& is,
         const size_t hdr_begin_byte_offset,
         const size_t z_index
@@ -226,7 +226,7 @@ void CCDImage<T>::load_from_cube_FITS_stream(const FitsHeader& preloaded_fht,
 }
 
 //template<typename T>
-//void CCDImage<T>::load_grid_info_from_fht(const FitsHeader& fht)
+//void CcdImage<T>::load_grid_info_from_fht(const FitsHeader& fht)
 //{
 //    if (fht.key_exists("CCD_RGN")) {
 //        CCD_gridinitialized_=true;
@@ -241,20 +241,20 @@ void CCDImage<T>::load_from_cube_FITS_stream(const FitsHeader& preloaded_fht,
 //}
 
 template<typename T>
-void CCDImage<T>::initialize_CCD_grid_for_raw_data()
+void CcdImage<T>::initialize_CCD_grid_for_raw_data()
 {
     if (CCD_grid.is_initialized())
         throw std::runtime_error("Image<T>::initialize_CCD_grid_for_raw_data() -"
                                  " CCD_grid already initialized");
 
-    CCD_grid=ImageGrid<coordinate_types::CCD>(pix.range(), CCD_Position(0.,0.),
+    CCD_grid=ImageGrid<coordinate_types::ccd>(pix.range(), CcdPosition(0.,0.),
              1.0);
 
 }
 
 template<typename T>
-void CCDImage<T>::initialize_CCD_grid_to_specific_region(
-    const CCD_BoxRegion& ccd_region)
+void CcdImage<T>::initialize_CCD_grid_to_specific_region(
+    const CcdBoxRegion& ccd_region)
 {
     if (CCD_grid.is_initialized())
         throw std::runtime_error("Image<T>::initialize_CCD_grid_to_specific_layout() -"
@@ -263,19 +263,19 @@ void CCDImage<T>::initialize_CCD_grid_to_specific_region(
     double deduced_pixel_x_scale = ccd_region.x_dim() / (double)pix.range().x_dim();
     //assert (square pixels)
     assert(deduced_pixel_x_scale == ccd_region.y_dim() / (double)pix.range().y_dim());
-    CCD_grid = ImageGrid<coordinate_types::CCD>(ccd_region, deduced_pixel_x_scale);
+    CCD_grid = ImageGrid<coordinate_types::ccd>(ccd_region, deduced_pixel_x_scale);
 }
 
 
 
 template<typename T>
-void CCDImage<T>::initialize_CCD_grid_to_specific_offset_and_scale(
-    const CCD_Position& ccd_low_corner, const double pixel_width_in_CCD_coords)
+void CcdImage<T>::initialize_CCD_grid_to_specific_offset_and_scale(
+    const CcdPosition& ccd_low_corner, const double pixel_width_in_CCD_coords)
 {
     if (CCD_grid.is_initialized())
         throw std::runtime_error("Image<T>::initialize_CCD_grid_to_specific_scale() -"
                                  " CCD_grid already initialized");
-    CCD_grid = ImageGrid<coordinate_types::CCD>(pix.range(),ccd_low_corner,
+    CCD_grid = ImageGrid<coordinate_types::ccd>(pix.range(),ccd_low_corner,
                pixel_width_in_CCD_coords);
 }
 
@@ -283,12 +283,12 @@ void CCDImage<T>::initialize_CCD_grid_to_specific_offset_and_scale(
 //NB THIS MUST GO AT THE END OF THE FILE
 //Otherwise the compiler tries to instantiate the templatized classes before
 //it has all the relevant information.
-template class CCDImage<float>;
-template class CCDImage<double>;
+template class CcdImage<float>;
+template class CcdImage<double>;
 
-template class CCDImage<int>;
-template class CCDImage<uint16_t>;
-template class CCDImage<uint32_t>;
+template class CcdImage<int>;
+template class CcdImage<uint16_t>;
+template class CcdImage<uint32_t>;
 
 //=========================================================================================================
 }//end namespace coela

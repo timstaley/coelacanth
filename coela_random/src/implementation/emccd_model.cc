@@ -71,7 +71,7 @@ double cicir_pmf(const int num_serial_register_stages,
     }
     return norm * output_prob;
 }
-//map<int,double> full_EMCCD_histogram_fit_FCN::get_CICIR_histogram(
+//map<int,double> FullEmccdHistogramFitFCN::get_CICIR_histogram(
 //    const double gain,
 //    const double N_CICIR_pix,
 //    const int N_EM_stages,

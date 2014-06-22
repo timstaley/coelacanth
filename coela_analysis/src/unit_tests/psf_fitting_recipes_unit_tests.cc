@@ -15,7 +15,7 @@
 using namespace coela;
 using namespace std;
 
-SUITE(psf_fitting_recipes)
+SUITE(PsfFitting_recipes)
 {
 
 
@@ -30,7 +30,7 @@ SUITE(psf_fitting_recipes)
         bool output_to_screen=false;
         PixelRange img_size(1,1,50,50);
 
-        psf_models::gaussian_psf_model g_model(5.0, 1.2);
+        psf_models::GaussianPsfModel g_model(5.0, 1.2);
 
         vector<unsigned long> seed;
         seed.push_back(111);
@@ -45,13 +45,13 @@ SUITE(psf_fitting_recipes)
         unuran::StreamWrapper rns;
         unuran::UniformRandomVariate urv(10.,40., rns);
 
-        CCD_Position g_model_true_centre(urv(), urv());
+        CcdPosition g_model_true_centre(urv(), urv());
 
         cerr<<"CCD centre Position: " <<g_model_true_centre<<endl;
 
-        psf_models::reference_psf test_psf_ref_img =
+        psf_models::ReferencePsf test_psf_ref_img =
             psf_models::generate_psf(g_model, img_size,
-                                     CCD_Position(0.0,0.0),
+                                     CcdPosition(0.0,0.0),
                                      g_model_true_centre,
                                      1.0,
                                      2,
@@ -61,14 +61,14 @@ SUITE(psf_fitting_recipes)
         test_psf_ref_img.psf_image.write_to_file(filename);
 
         PixelIndex peak_pixel = test_psf_ref_img.psf_image.pix.max_PixelIndex();
-        CCD_Position initial_centre_estimate =
+        CcdPosition initial_centre_estimate =
             test_psf_ref_img.psf_image.CCD_grid.corresponding_grid_Position(
                 PixelPosition::centre_of_pixel(peak_pixel));
 
 
         psf_fitting::least_squares_weighting lsq_weight;
 
-        psf_fitting::Mn2_models::PSF_Fit<psf_models::gaussian_psf_model>
+        psf_fitting::Mn2_models::PsfFit<psf_models::GaussianPsfModel>
         fit_result =
             psf_fitting::fit_gaussian_model(test_psf_ref_img.psf_image,
                                             initial_centre_estimate,

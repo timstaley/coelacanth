@@ -44,7 +44,7 @@ SnapshotOptions default_options()
 void print_usage_and_exit()
 {
     SnapshotOptions s = default_options();
-    cout<<"Usage: lucky_snapshot CCD_datasetInfo.txt \n\n"
+    cout<<"Usage: lucky_snapshot CcdDatasetInfo.txt \n\n"
         <<"[-n --nthreads (number)]      --- Use n processor threads (default: "
         << s.n_threads << ")"<<endl
         <<"[-m --nframes (number)]      ---Create snapshot from m frames; default:"
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 {
 
     SnapshotOptions opts = load_options_from_command_line(argc, argv);
-    CCD_DatasetInfo dataset_inf(opts.dataset_info_path);
+    CcdDatasetInfo dataset_inf(opts.dataset_info_path);
     CameraConfigInfo camconf(dataset_inf.default_camera_config_file);
 
     vector<FrameInfo> frame_vec(
@@ -86,26 +86,26 @@ int main(int argc, char** argv)
                                   dataset_inf.dataset_output_base_dir
                                  ));
 
-    CCD_calibration_info ccd_calibration =
+    CcdCalibrationInfo ccd_calibration =
         camconf.get_calibration_info_for_CCD_id(dataset_inf.ccd_id);
 
     PixelRange crop_box = ccd_calibration.cropped_PixelRange;
 
     PixelArray2d<float> bias_frm(crop_box.x_dim(), crop_box.y_dim(), 0.0);
 
-    Sequential_File_Buffer_Filter<> input_filter(frame_vec, opts.n_frames);
-    Decompress_Filter decompressor;
-    Frame_Count_Display_Filter count_filter(true);
+    SequentialFileBufferFilter<> input_filter(frame_vec, opts.n_frames);
+    DecompressFilter decompressor;
+    FrameCountDisplayFilter count_filter(true);
     FrameCropFilter crop_filter(crop_box); //Use these two if we have a good background region
 
-    Col_Histogram_Gather col_hist_filter(crop_box,
+    ColHistogramGather col_hist_filter(crop_box,
                                          50, crop_box.y_dim());
     col_hist_filter.set_hist_min_value(-300);
 
-    Frame_Summation sum_filter(bias_frm.range(),
+    FrameSummation sum_filter(bias_frm.range(),
                                ccd_calibration.crop_region);
 
-    Serial_Decommission_Filter end_filter;
+    SerialDecommissionFilter end_filter;
 
     cout<<"Initializing scheduler with " << opts.n_threads <<" threads."<<endl;
 
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     cout<<"\n";
 
 
-    CCDImage<double> raw_sum = sum_filter.Avg();
+    CcdImage<double> raw_sum = sum_filter.Avg();
     string output_dir = dataset_inf.dataset_output_base_dir+"snapshot/";
     boost::filesystem::create_directories(output_dir);
 
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
                       "_"+string_utils::itoa(opts.n_frames)+"_frm_snapshot";
 
 //    raw_sum.write_to_file(output_dir+ filestem + "raw.fits");
-    CCDImage<double> coldb = raw_sum;
+    CcdImage<double> coldb = raw_sum;
     coldb.pix -= PixelArray2d<double>(bias_frm);
     coldb.write_to_file(output_dir+ filestem + ".fits");
 

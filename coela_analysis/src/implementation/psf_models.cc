@@ -14,7 +14,7 @@ namespace coela {
 namespace psf_models {
 
 //================================================================================
-double calculate_total_flux(const axisymmetric_psf_model_interface& psf_gen,
+double calculate_total_flux(const AxisymmetricPsfModelInterface& psf_gen,
                             const double step_size,
                             const size_t CCD_pixel_limit,
                             const double precision)
@@ -45,7 +45,7 @@ double calculate_total_flux(const axisymmetric_psf_model_interface& psf_gen,
 }
 
 double calculate_flux_enclosed_at_radius(
-    const axisymmetric_psf_model_interface& psf_gen,
+    const AxisymmetricPsfModelInterface& psf_gen,
     const double max_radius,
     const double step_size
 )
@@ -63,14 +63,14 @@ double calculate_flux_enclosed_at_radius(
     return sum;
 }
 
-double calculate_strehl(const axisymmetric_psf_model_interface& psf_gen,
+double calculate_strehl(const AxisymmetricPsfModelInterface& psf_gen,
                         const double airy_total_flux)
 {
     double psf_flux_for_unit_peak = calculate_total_flux(psf_gen) / psf_gen(0.0);
     return airy_total_flux / psf_flux_for_unit_peak ;
 }
 
-double fwhm_in_CCD_pix(const axisymmetric_psf_model_interface& psf_gen,
+double fwhm_in_CCD_pix(const AxisymmetricPsfModelInterface& psf_gen,
                        const double CCD_pixel_width_precision)
 {
     double half_max = psf_gen(0.0)/2.0;
@@ -93,7 +93,7 @@ double fwhm_in_CCD_pix(const axisymmetric_psf_model_interface& psf_gen,
     return half_width*2.0;
 }
 
-double find_first_minima_in_CCD_pix(const axisymmetric_psf_model_interface& psf_gen,
+double find_first_minima_in_CCD_pix(const AxisymmetricPsfModelInterface& psf_gen,
                                     const double CCD_pixel_stepsize)
 {
     double prev_val = psf_gen(0.0);
@@ -109,19 +109,19 @@ double find_first_minima_in_CCD_pix(const axisymmetric_psf_model_interface& psf_
 }
 
 //================================================================================
-airy_psf_model::airy_psf_model()
+AiryPsfModel::AiryPsfModel()
     :peak_val(-1.0), rads_per_CCD_pix(-1.0), wavelength(-1.0),
      aperture_diameter(-1.0), obscuration_diameter(-1.0)
 {}
 
-airy_psf_model::airy_psf_model(double peak_value, double rads_per_CCD_pixel,
+AiryPsfModel::AiryPsfModel(double peak_value, double rads_per_CCD_pixel,
                                double wavelength_,
                                double aperture_diameter_, double central_obscuration_diameter_)
     :peak_val(peak_value), rads_per_CCD_pix(rads_per_CCD_pixel), wavelength(wavelength_),
      aperture_diameter(aperture_diameter_), obscuration_diameter(central_obscuration_diameter_)
 {}
 
-double airy_psf_model::operator()(double radius_in_CCD_pix) const
+double AiryPsfModel::operator()(double radius_in_CCD_pix) const
 {
     return peak_val*
            misc_math::airy_function(radius_in_CCD_pix*rads_per_CCD_pix,
@@ -131,33 +131,33 @@ double airy_psf_model::operator()(double radius_in_CCD_pix) const
 
 //================================================================================
 
-gaussian_psf_model::gaussian_psf_model()
+GaussianPsfModel::GaussianPsfModel()
     :peak_val(-1.0),sigma_in_CCD_pix(-1.0)
 {}
 
-gaussian_psf_model::gaussian_psf_model(double peak_value,
+GaussianPsfModel::GaussianPsfModel(double peak_value,
                                        double sigma_measured_in_CCD_pixels)
     :peak_val(peak_value), sigma_in_CCD_pix(sigma_measured_in_CCD_pixels)
 {}
 
-double gaussian_psf_model::operator()(double radius_in_CCD_pix) const
+double GaussianPsfModel::operator()(double radius_in_CCD_pix) const
 {
     return misc_math::gaussian_1d_function(radius_in_CCD_pix, peak_val, sigma_in_CCD_pix);
 }
 
 //================================================================================
-empirical_psf_model::empirical_psf_model(
+EmpiricalPsfModel::EmpiricalPsfModel(
     const std::vector<psf_characterisation::detail::psf_profile_point>& pts)
     :datapoints(pts)
 {}
 
-double empirical_psf_model::operator()(double radius_in_CCD_pix) const
+double EmpiricalPsfModel::operator()(double radius_in_CCD_pix) const
 {
     return get_interpolated_point_at_radius(radius_in_CCD_pix).median_value;
 }
 
 psf_characterisation::detail::psf_profile_point
-empirical_psf_model::get_interpolated_point_at_radius(double radius_in_CCD_pix) const
+EmpiricalPsfModel::get_interpolated_point_at_radius(double radius_in_CCD_pix) const
 {
     return psf_characterisation::detail::interpolate_profile_to_radius(
                datapoints, radius_in_CCD_pix);
@@ -166,9 +166,9 @@ empirical_psf_model::get_interpolated_point_at_radius(double radius_in_CCD_pix) 
 
 //================================================================================
 
-hybrid_radial_switchover_psf_model::hybrid_radial_switchover_psf_model(
-    const axisymmetric_psf_model_interface* inner_model_ptr,
-    const axisymmetric_psf_model_interface* outer_model_ptr,
+HybridRadialSwitchoverPsfModel::HybridRadialSwitchoverPsfModel(
+    const AxisymmetricPsfModelInterface* inner_model_ptr,
+    const AxisymmetricPsfModelInterface* outer_model_ptr,
     const double switchover_radius,
     const double normalization_factor)
     :inner_model_ptr_(inner_model_ptr), outer_model_ptr_(outer_model_ptr),
@@ -176,7 +176,7 @@ hybrid_radial_switchover_psf_model::hybrid_radial_switchover_psf_model(
      normalization_factor_(normalization_factor)
 {}
 
-double hybrid_radial_switchover_psf_model::operator()(double radius_in_CCD_pix) const
+double HybridRadialSwitchoverPsfModel::operator()(double radius_in_CCD_pix) const
 {
     if (radius_in_CCD_pix<switchover_radius_) {
         return normalization_factor_*(*inner_model_ptr_)(radius_in_CCD_pix) ;

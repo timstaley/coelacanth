@@ -17,7 +17,7 @@ namespace bfs=boost::filesystem;
 namespace coela {
 using namespace string_utils;
 
-file_info::file_info():
+FileInfo::FileInfo():
     file_path("p"),derived_lcc_filename("p"),
     header_byte_offset(0), byte_size(0),
     file_is_cube_FITS(false),
@@ -25,14 +25,14 @@ file_info::file_info():
     folder_number(-1), subfile_number(-1), header_timestamp(-1) {}
 
 
-file_info file_info::basic_fits_file(const std::string& fname)
+FileInfo FileInfo::basic_fits_file(const std::string& fname)
 {
-    file_info fi; //use default constructor
+    FileInfo fi; //use default constructor
     fi.file_path=fname;
     return fi;
 }
 
-std::ostream& operator<<(std::ostream& os, const file_info& file)
+std::ostream& operator<<(std::ostream& os, const FileInfo& file)
 {
     os<<file.ccd_id<<","<<file.folder_number<<","<<pull_file_number_string(
           file.file_path)<<","<<file.subfile_number
@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& os, const file_info& file)
     return os;
 }
 
-void file_info::load_key_vals_from_header_table(const FitsHeader& kvc_table)
+void FileInfo::load_key_vals_from_header_table(const FitsHeader& kvc_table)
 {
     ccd_id=atoi(kvc_table.get_key_value("CAMERAID"));
     header_timestamp = atol(kvc_table.get_key_value("FRAMETIM"));
@@ -49,22 +49,22 @@ void file_info::load_key_vals_from_header_table(const FitsHeader& kvc_table)
 }
 
 
-void file_info::get_subfiles_info(std::list<string>& lcm_list,
-                                  std::list<file_info>& subfiles, const std::string& extension)
+void FileInfo::get_subfiles_info(std::list<string>& lcm_list,
+                                  std::list<FileInfo>& subfiles, const std::string& extension)
 {
     if (extension==".lcm"||extension=="lcm") { get_lcm_subfiles_info(lcm_list, subfiles); }
     else if (extension==".lcz") { subfiles = lcz_utils::build_lcz_subfile_index(lcm_list); }
     else { throw runtime_error("get_subfiles_info - extension not recognised"); }
 }
-void file_info::get_lcm_subfiles_info(const std::list<string>& lcm_list,
-                                      std::list<file_info>& subfiles)
+void FileInfo::get_lcm_subfiles_info(const std::list<string>& lcm_list,
+                                      std::list<FileInfo>& subfiles)
 {
     //iterate through the lcm filenames
     for (list<string>::const_iterator iter = lcm_list.begin(); iter!=lcm_list.end(); ++iter) {
 
         vector<size_t> offsets(parse_lcm_header(
                                    *iter));    //this is where the work is really done - A vector of byte offsets is returned
-        file_info subfile;
+        FileInfo subfile;
         size_t total_files_in_lcm=
             offsets.size();           //this line mostly just improves readability
 
@@ -80,23 +80,23 @@ void file_info::get_lcm_subfiles_info(const std::list<string>& lcm_list,
 }
 
 
-bool file_info::filename_number_predicate(const string& first_filename,
+bool FileInfo::filename_number_predicate(const string& first_filename,
         const string& second_filename)
 {
     return (string_utils::pull_file_number(first_filename) < string_utils::pull_file_number(
                 second_filename));
 }
-bool file_info::subfile_number_predicate(const file_info& first, const file_info& second)
+bool FileInfo::subfile_number_predicate(const FileInfo& first, const FileInfo& second)
 {
     return (first.subfile_number < second.subfile_number);
 }
 
-bool file_info::frame_id_predicate(const file_info& first, const file_info& second)
+bool FileInfo::frame_id_predicate(const FileInfo& first, const FileInfo& second)
 {
     return (first.corrected_frame_id < second.corrected_frame_id);
 }
 
-bool file_info::subfile_numbers_equal(const file_info& first, const file_info& second)
+bool FileInfo::subfile_numbers_equal(const FileInfo& first, const FileInfo& second)
 {
     return (first.subfile_number == second.subfile_number);
 }
@@ -108,7 +108,7 @@ bool file_info::subfile_numbers_equal(const file_info& first, const file_info& s
 
 
 
-vector<size_t> file_info::parse_lcm_header(const string& filename)
+vector<size_t> FileInfo::parse_lcm_header(const string& filename)
 {
     vector<size_t> byte_offset_values;
     string line;
@@ -136,7 +136,7 @@ vector<size_t> file_info::parse_lcm_header(const string& filename)
     return byte_offset_values;
 }
 
-std::list<file_info> file_info::get_image_file_list(const std::string& dir_in,
+std::list<FileInfo> FileInfo::get_image_file_list(const std::string& dir_in,
         const std::string& filestem, int CCD_id, const std::string& extension)
 {
     if (extension.find("lcz")!=string::npos) { cout <<"Warning - this file lister does not check for lcz indices."<<endl; }
@@ -151,22 +151,22 @@ std::list<file_info> file_info::get_image_file_list(const std::string& dir_in,
     if (matching_files.empty()) { throw runtime_error("No matching files for: "+ dir_in +"; "+filestem +"; "+extension); }
 
     //Now get subfiles info if applicable
-    list<file_info> files_info;
+    list<FileInfo> files_info;
 
     if ((extension==".lcm" || extension=="lcm" ||extension ==".lcz"))  {
-        file_info::get_subfiles_info(matching_files, files_info,
+        FileInfo::get_subfiles_info(matching_files, files_info,
                                      extension); //if the files are LCM, interrogate the headers to create subfile info
     } else {
         //dealing with regular fits files, assume they have no index file and no header data on frame id, etc.
         //Assign header ordering stamps, (assuming that alphabetically sorting the files == sort into chronological order)
         size_t file_counter=1;
-        matching_files.sort(file_info::filename_number_predicate);
+        matching_files.sort(FileInfo::filename_number_predicate);
         for (list<string>::iterator iter=matching_files.begin(); iter!=matching_files.end();
                 ++iter) {
-            //otherwise just initialise each file_info as normal.
+            //otherwise just initialise each FileInfo as normal.
             if (iter->find(filestem)==0 || iter->find('/'+filestem)!=string::npos) {
                 //ASSUMPTION - directory markers are fwd slash ("/", unix!)
-                file_info f=file_info::basic_fits_file(*iter);
+                FileInfo f=FileInfo::basic_fits_file(*iter);
                 f.subfile_number=file_counter;
                 f.header_frame_id=file_counter;
                 f.corrected_frame_id=file_counter;
@@ -184,20 +184,20 @@ std::list<file_info> file_info::get_image_file_list(const std::string& dir_in,
                           files_info.front().header_byte_offset);
     if (temp_table.key_exists("NAXIS3")
             && string_utils::atoi(temp_table.get_key_value("NAXIS3"))!=0) {
-        for (list<file_info>::iterator iter=files_info.begin(); iter!=files_info.end(); ++iter) {
+        for (list<FileInfo>::iterator iter=files_info.begin(); iter!=files_info.end(); ++iter) {
             iter->file_is_cube_FITS=true;
         }
     }
 
 
     cout <<"done"<<endl;
-    file_info::convert_paths_to_system_complete(files_info);
+    FileInfo::convert_paths_to_system_complete(files_info);
 //        files_info.sort();
     return files_info;
 }
 
 
-string file_info::generate_unpacked_lcc_filename(const string& filename, int file_num,
+string FileInfo::generate_unpacked_lcc_filename(const string& filename, int file_num,
         int files_in_lcm)   //filename is e.g. dir/blah_X.lcm
 {
     string end_string(filename.substr(filename.find_last_of('_') +
@@ -210,7 +210,7 @@ string file_info::generate_unpacked_lcc_filename(const string& filename, int fil
            ".fits";                //returns dir/blah_(X+y).lcc
 }
 
-int file_info::read_num_files_in_lcm(const string& lcm_filename)
+int FileInfo::read_num_files_in_lcm(const string& lcm_filename)
 {
     string line;
     int num_files;
@@ -230,7 +230,7 @@ int file_info::read_num_files_in_lcm(const string& lcm_filename)
     return num_files;
 }
 
-file_info file_info::load_from_lcz_index_line(const std::string& index_line,
+FileInfo FileInfo::load_from_lcz_index_line(const std::string& index_line,
         const std::string& base_folder,
         const std::string& ccd_stem, const std::string& subfolder_stem,
         const std::string& filestem,
@@ -241,7 +241,7 @@ file_info file_info::load_from_lcz_index_line(const std::string& index_line,
             subfolder_stem, filestem, file_extension);
 }
 
-file_info file_info::load_from_lcz_index_line_segments(const vector<string>&
+FileInfo FileInfo::load_from_lcz_index_line_segments(const vector<string>&
         line_segments,
         const std::string& base_folder,
         const std::string& ccd_stem, const std::string& subfolder_stem,
@@ -249,7 +249,7 @@ file_info file_info::load_from_lcz_index_line_segments(const vector<string>&
         const std::string& file_extension)
 {
     assert(line_segments.size()==8);
-    file_info subfile;
+    FileInfo subfile;
     subfile.ccd_id = atoi(line_segments[0]);
     subfile.folder_number = atoi(line_segments[1]);
     string lcz_number=line_segments[2];
@@ -269,9 +269,9 @@ file_info file_info::load_from_lcz_index_line_segments(const vector<string>&
     return subfile;
 }
 
-void file_info::convert_paths_to_system_complete(std::list<file_info>& file_list)
+void FileInfo::convert_paths_to_system_complete(std::list<FileInfo>& file_list)
 {
-    for (list<file_info>::iterator it=file_list.begin(); it!=file_list.end(); ++it) {
+    for (list<FileInfo>::iterator it=file_list.begin(); it!=file_list.end(); ++it) {
         it->file_path = boost::filesystem::system_complete(it->file_path).string();
     }
 }
@@ -308,13 +308,13 @@ void file_info::convert_paths_to_system_complete(std::list<file_info>& file_list
 
 namespace lcz_utils {
 
-list<file_info> build_lcz_subfile_index(const std::list<string>& lcz_list)
+list<FileInfo> build_lcz_subfile_index(const std::list<string>& lcz_list)
 {
-    list<file_info> subfiles;
+    list<FileInfo> subfiles;
     int counter=0;
     for (list<string>::const_iterator iter = lcz_list.begin(); iter!=lcz_list.end(); ++iter) {
         cout <<"\rParsing file "<<++counter<<" of " <<lcz_list.size()<<": " << *iter <<"\t\t";
-        list<file_info> lcz_files= parse_lcz_file(*iter);
+        list<FileInfo> lcz_files= parse_lcz_file(*iter);
         subfiles.splice(subfiles.end(), lcz_files);
     }
 //            subfiles= parse_lcz_file(lcz_list.front()); //debug version
@@ -323,21 +323,21 @@ list<file_info> build_lcz_subfile_index(const std::list<string>& lcz_list)
 
 bool empty_files_present(const std::list<string>& lcz_list)
 {
-    list<file_info> subfiles;
+    list<FileInfo> subfiles;
     for (list<string>::const_iterator iter = lcz_list.begin(); iter!=lcz_list.end(); ++iter) {
         if (bfs::file_size(*iter)==0) { return true; }
     }
     return false;
 }
 
-list<file_info> get_lcz_subfile_list(const std::string& ccd_dir,
+list<FileInfo> get_lcz_subfile_list(const std::string& ccd_dir,
                                      const std::string& index_output_dir)
 {
     string lcz_extension=".lcz";
     list<string> matching_filenames = file_utils::get_matching_files_recursively(ccd_dir,
                                       lcz_extension);
 
-    list<file_info> lcc_subfiles;
+    list<FileInfo> lcc_subfiles;
 
     //-----------------------------------------------------------------------------------------------------------
     //Calculate the index filename and base dir:
@@ -369,7 +369,7 @@ list<file_info> get_lcz_subfile_list(const std::string& ccd_dir,
     //Determine if the index is present
 
     string index_path, data_dir;
-    list<file_info> subfile_list;
+    list<FileInfo> subfile_list;
     cout <<"Looking for index at "<<index_output_dir+index_filename<<endl;
     if (bfs::exists(index_output_dir+index_filename)) {
         //Check for index in output dir first
@@ -397,7 +397,7 @@ list<file_info> get_lcz_subfile_list(const std::string& ccd_dir,
         //if no index exists
         cout <<"No index file found, building index..."<<endl;
         subfile_list=build_lcz_subfile_index(matching_filenames);
-        subfile_list.sort(file_info::subfile_number_predicate);
+        subfile_list.sort(FileInfo::subfile_number_predicate);
         if (subfile_list.empty()) { throw runtime_error("No valid files found for this folder: "+absolute_ccd_dir.string()); }
         cout <<"Writing new index to file \""<<index_output_dir+index_filename<<"\"";
         write_lcz_index(subfile_list, index_output_dir+index_filename);
@@ -460,7 +460,7 @@ std::list<int> get_lcz_nums(const std::string& index_filename)
     return get_lcz_nums(text);
 }
 
-void write_lcz_index(const std::list<file_info>& subfiles, const string& index_filename)
+void write_lcz_index(const std::list<FileInfo>& subfiles, const string& index_filename)
 {
     assert(!subfiles.empty());
 
@@ -490,7 +490,7 @@ void write_lcz_index(const std::list<file_info>& subfiles, const string& index_f
     }
 
 }
-void write_lcz_index(const std::list<file_info>& subfiles, const string& index_filename,
+void write_lcz_index(const std::list<FileInfo>& subfiles, const string& index_filename,
                      const string& root_folder, const string& cam_folder_stem, const string& sub_folder_stem,
                      const string& filestem)
 {
@@ -498,12 +498,12 @@ void write_lcz_index(const std::list<file_info>& subfiles, const string& index_f
     if (!index_file) { throw runtime_error("Could not write to file: "+index_filename); }
     index_file
             <<root_folder<<","<<cam_folder_stem<<","<<sub_folder_stem<<","<<filestem<<",lcz\n"; //nb root folder actually ignored, just a placeholder
-    for (list<file_info>::const_iterator it=subfiles.begin(); it!=subfiles.end(); ++it) {
+    for (list<FileInfo>::const_iterator it=subfiles.begin(); it!=subfiles.end(); ++it) {
         index_file <<*it<<"\n";
     }
 }
 
-std::list<file_info> parse_lcz_file(const std::string& lcz_filename)
+std::list<FileInfo> parse_lcz_file(const std::string& lcz_filename)
 {
     ifstream input_file(lcz_filename.c_str(), ifstream::binary |ifstream::ate);
     if (!input_file.is_open()) {throw runtime_error("Could not open file: \""+lcz_filename+"\"");}
@@ -521,7 +521,7 @@ std::list<file_info> parse_lcz_file(const std::string& lcz_filename)
     uint32_t start_int = *(uint32_t*)&start_text;
     uint32_t end_int = *(uint32_t*)&end_text;
 
-    list<file_info> index;
+    list<FileInfo> index;
 
     //NB Here, "header" and "tail" refer to <<<<blah.lcc   >>>>> (NOT the fits header.)
 
@@ -567,7 +567,7 @@ std::list<file_info> parse_lcz_file(const std::string& lcz_filename)
         string subfile_name = header_text.substr(name_start,
                               header_text.find_last_not_of(" >") - name_start + 1);
 
-        file_info subfile=file_info::basic_fits_file(lcz_filename);
+        FileInfo subfile=FileInfo::basic_fits_file(lcz_filename);
         //get rid of any square bracketed filenames
         if (subfile_name.find('[')!=string::npos) { subfile_name = lcz_utils::mangle_lcz_filename(subfile_name); }
         subfile.derived_lcc_filename= subfile_name;
@@ -587,7 +587,7 @@ std::list<file_info> parse_lcz_file(const std::string& lcz_filename)
 
 //deprecated:
 /*
-void get_lcz_subfiles_info(std::list<string>& lcm_list, std::list<file_info>& subfiles){
+void get_lcz_subfiles_info(std::list<string>& lcm_list, std::list<FileInfo>& subfiles){
     string ccd_folder_stem, subfolder_stem;
     string target_root_folder = lcm_list.front(); //probably contains /blah/target/Camera_0/Folder_0/Image_0_0.lcz (but could be Folder0/image_0_1.lcz if already in Cam dir.)
     cout <<"First file path: " <<target_root_folder<<endl;
@@ -648,11 +648,11 @@ void get_lcz_subfiles_info(std::list<string>& lcm_list, std::list<file_info>& su
         //Often there is an extra copy of a penultimate lcz
         cout <<"Scanning " <<lcm_list.back() <<" to determine if it is a mis-copy to be ignored"<<endl;
         list<string>::const_iterator it=lcm_list.end(); --it;
-        list<file_info> suspect_lcz_subfiles= parse_lcz_file( *it);
+        list<FileInfo> suspect_lcz_subfiles= parse_lcz_file( *it);
         --it;
-        list<file_info> one_from_last= parse_lcz_file(*it);
+        list<FileInfo> one_from_last= parse_lcz_file(*it);
         --it;
-        list<file_info> two_from_last= parse_lcz_file(*it);
+        list<FileInfo> two_from_last= parse_lcz_file(*it);
 
         if (suspect_lcz_subfiles.front().derived_lcc_filename==two_from_last.front().derived_lcc_filename){
             cout <<lcm_list.back() <<" Is a duplicate of "<< two_from_last.front().file_path<<", ignoring..."<<endl;
@@ -675,7 +675,7 @@ void get_lcz_subfiles_info(std::list<string>& lcm_list, std::list<file_info>& su
 
     if (valid_index) {
         cout <<"Loading subfile info from index file...";
-        list<file_info> indexed_files = parse_lcz_index(index_filename);
+        list<FileInfo> indexed_files = parse_lcz_index(index_filename);
         subfiles.splice(subfiles.end(), indexed_files);
 
         assert(!subfiles.empty());
@@ -685,15 +685,15 @@ void get_lcz_subfiles_info(std::list<string>& lcm_list, std::list<file_info>& su
         cout <<"Building index file" <<endl;
         for (list<string>::const_iterator iter = lcm_list.begin(); iter!=lcm_list.end(); ++iter){
             cout <<"\rParsing " << *iter <<"...            ";
-            list<file_info> lcz_files= parse_lcz_file(*iter);
+            list<FileInfo> lcz_files= parse_lcz_file(*iter);
             subfiles.splice(subfiles.end(), lcz_files);
         }
         write_lcz_index(subfiles, index_filename,
             target_root_folder, ccd_folder_stem, subfolder_stem, filestem );
     }
     size_t before_check_unique=subfiles.size();
-    subfiles.sort(file_info::subfile_number_predicate);
-    subfiles.unique(file_info::subfile_numbers_equal);
+    subfiles.sort(FileInfo::subfile_number_predicate);
+    subfiles.unique(FileInfo::subfile_numbers_equal);
     if (subfiles.size()!= before_check_unique) throw runtime_error("Most troubling - duplicate subfile numbers detected");
 }
 */
@@ -713,11 +713,11 @@ bool check_lcz_index_is_standard_format(const string& index_filename)
 }
 
 
-std::list<file_info> parse_lcz_index(const string& index_filename,
+std::list<FileInfo> parse_lcz_index(const string& index_filename,
                                      const string& data_root_dir)
 {
     using namespace string_utils;
-    list<file_info> lcc_files;
+    list<FileInfo> lcc_files;
     ifstream index_file(index_filename.c_str());
     if (!index_file) { throw runtime_error("Can't open index for parsing at" + index_filename); }
     vector<string> text = simple_serialization::convert_istream_to_string_vec(index_file);
@@ -743,7 +743,7 @@ std::list<file_info> parse_lcz_index(const string& index_filename,
     cout <<"Loading index file with root folder " <<root_folder<<endl;
     for (size_t i=1; i<text.size(); ++i) {
         //(start at 1 to avoid header line)
-        file_info indexed_subfile = file_info::load_from_lcz_index_line(text[i],
+        FileInfo indexed_subfile = FileInfo::load_from_lcz_index_line(text[i],
                                     root_folder,
                                     cam_stem, subfolder_stem, filestem, file_extension
                                                                        );
@@ -753,7 +753,7 @@ std::list<file_info> parse_lcz_index(const string& index_filename,
         if (!reached_last_lcz && atoi(lcz_file_num)==lcz_filenums_present.back()) {
             //last lcz file in the run.
             cout <<"Checking if last file is a miscopy..."<<flush;
-            list<file_info> last_lcz_subfiles = parse_lcz_file(indexed_subfile.file_path);
+            list<FileInfo> last_lcz_subfiles = parse_lcz_file(indexed_subfile.file_path);
             reached_last_lcz=true;
             if (last_lcz_subfiles.front().derived_lcc_filename!=
                     indexed_subfile.derived_lcc_filename) {
@@ -773,13 +773,13 @@ std::list<file_info> parse_lcz_index(const string& index_filename,
 }
 
 
-bool check_headers_match_index(const std::list<file_info>& files)
+bool check_headers_match_index(const std::list<FileInfo>& files)
 {
     bool headers_match=true;
-    for (list<file_info>::const_iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::const_iterator it=files.begin(); it!=files.end(); ++it) {
         cout <<"\rChecking " <<it->derived_lcc_filename<<"\t\t"<<flush;
         FitsHeader hdr_tbl(it->file_path, it->header_byte_offset);
-        file_info hdr_inf(*it);
+        FileInfo hdr_inf(*it);
         hdr_inf.load_key_vals_from_header_table(hdr_tbl);
         if (hdr_inf.header_frame_id!= it->header_frame_id) {
             cerr<<"Frame ID mismatch for subfile " <<it->subfile_number <<endl; headers_match=false;
@@ -798,11 +798,11 @@ bool check_headers_match_index(const std::list<file_info>& files)
 }
 
 
-int check_frames_stored_sequentially(const std::list<file_info>& files)
+int check_frames_stored_sequentially(const std::list<FileInfo>& files)
 {
     int frames_dropped=0;
     int prev_num = files.front().corrected_frame_id-1;
-    for (list<file_info>::const_iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::const_iterator it=files.begin(); it!=files.end(); ++it) {
         int current_num=it->corrected_frame_id;
         if (current_num!= prev_num+1) {
             cout <<"Non sequitur between frame ids " <<prev_num<<" and " <<current_num<<endl;
@@ -814,12 +814,12 @@ int check_frames_stored_sequentially(const std::list<file_info>& files)
     return frames_dropped;
 }
 
-int check_for_dropped_frames(std::list<file_info>& files)
+int check_for_dropped_frames(std::list<FileInfo>& files)
 {
     int frames_dropped=0;
-    files.sort(file_info::frame_id_predicate);
+    files.sort(FileInfo::frame_id_predicate);
     int prev_num = files.front().corrected_frame_id-1;
-    for (list<file_info>::const_iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::const_iterator it=files.begin(); it!=files.end(); ++it) {
         int current_num=it->corrected_frame_id;
         if (current_num!= prev_num+1) {
             cout <<"Frame ids missing between " <<prev_num<<" and "
@@ -835,12 +835,12 @@ int check_for_dropped_frames(std::list<file_info>& files)
     return frames_dropped;
 }
 
-int check_for_duplicate_frame_ids(std::list<file_info>& files)
+int check_for_duplicate_frame_ids(std::list<FileInfo>& files)
 {
     int frames_duped=0;
-    files.sort(file_info::frame_id_predicate);
+    files.sort(FileInfo::frame_id_predicate);
     int prev_num = files.front().corrected_frame_id-1;
-    for (list<file_info>::const_iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::const_iterator it=files.begin(); it!=files.end(); ++it) {
         int current_num=it->corrected_frame_id;
         if (current_num== prev_num) {
             //                cout <<"Duplicate Frame id: " <<current_num<<endl;
@@ -855,11 +855,11 @@ int check_for_duplicate_frame_ids(std::list<file_info>& files)
     return frames_duped;
 }
 
-void set_correct_frame_ids(std::list<file_info>& files)
+void set_correct_frame_ids(std::list<FileInfo>& files)
 {
     int loop_number=0;
     int prev_hdr_id=0;
-    for (list<file_info>::iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::iterator it=files.begin(); it!=files.end(); ++it) {
         if (it->header_frame_id==-1) {
             FitsHeader tmp_hdr_tbl(it->file_path, it->header_byte_offset);
             if (tmp_hdr_tbl.key_exists("FRAMENUM")) {
@@ -879,11 +879,11 @@ void set_correct_frame_ids(std::list<file_info>& files)
 }
 
 
-void remove_duplicate_frame_ids(std::list<file_info>& files, const bool rigorous_check)
+void remove_duplicate_frame_ids(std::list<FileInfo>& files, const bool rigorous_check)
 {
-    files.sort(file_info::frame_id_predicate);
+    files.sort(FileInfo::frame_id_predicate);
     int prev_num = files.front().corrected_frame_id-1;
-    for (list<file_info>::iterator it=files.begin(); it!=files.end(); ++it) {
+    for (list<FileInfo>::iterator it=files.begin(); it!=files.end(); ++it) {
         int current_num=it->corrected_frame_id;
 
         if (current_num== prev_num) {
@@ -904,9 +904,9 @@ void remove_duplicate_frame_ids(std::list<file_info>& files, const bool rigorous
     }
 }
 
-void sanitise_list(std::list<file_info>& files)
+void sanitise_list(std::list<FileInfo>& files)
 {
-    files.sort(file_info::subfile_number_predicate);
+    files.sort(FileInfo::subfile_number_predicate);
     set_correct_frame_ids(files);
     int dupes = check_for_duplicate_frame_ids(files);
     if (dupes) {

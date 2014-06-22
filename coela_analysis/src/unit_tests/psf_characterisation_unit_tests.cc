@@ -97,11 +97,11 @@ SUITE(psf_characterisation)
         //Oversized range should be ok.
 
 
-        vector<psf_profile_point> profile_info =
+        vector<psf_profile_point> proFileInfo =
             bin_average_radial_data(radial_data);
 
-//        cout<<"Get " << profile_info.size()<<" bins"<<endl;
-        CHECK(profile_info.size() > cone_img.range().x_dim()/2.0);
+//        cout<<"Get " << proFileInfo.size()<<" bins"<<endl;
+        CHECK(proFileInfo.size() > cone_img.range().x_dim()/2.0);
         //expect a few extra along the diagonal
     }
 

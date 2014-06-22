@@ -12,7 +12,7 @@ using namespace std;
 namespace coela {
 namespace psf_characterisation {
 //
-//double estimate_fwhm_in_image_pix(const PixelArray2d<double>& bmp, const CCD_Position& CCD_lock, const double est_peak_value, const double max_radius){
+//double estimate_fwhm_in_image_pix(const PixelArray2d<double>& bmp, const CcdPosition& CCD_lock, const double est_peak_value, const double max_radius){
 //    PixelPosition frame_pos = bmp.corresponding_frame_Position(CCD_lock);
 //    return  estimate_fwhm_in_image_pix(bmp, frame_pos, est_peak_value, max_radius);
 //
@@ -171,7 +171,7 @@ bool compare_profile_point_radius(const psf_profile_point& first,
     return (first.avg_radius < second.avg_radius);
 }
 
-void psf_profile_point::save_profile_information_to_file(const std::string& filename,
+void psf_profile_point::save_proFileInformation_to_file(const std::string& filename,
         const vector<psf_profile_point>& pts,
 //        const double peak_val,
         const std::string output_prefix)
@@ -237,7 +237,7 @@ bool double_pair_first_member_predicate(const std::pair <double, double>  & firs
 }
 
 //---------------------------------------------------------------------------------------------------------------
-//vector<pair <double, double>  > get_radial_data(const PixelArray2d<double>& bmp, const CCD_Position& CCD_lock, double max_radius){
+//vector<pair <double, double>  > get_radial_data(const PixelArray2d<double>& bmp, const CcdPosition& CCD_lock, double max_radius){
 //    PixelPosition frame_pos = bmp.corresponding_frame_Position(CCD_lock);
 //    return get_radial_data(bmp, frame_pos, max_radius);
 //}
@@ -245,7 +245,7 @@ bool double_pair_first_member_predicate(const std::pair <double, double>  & firs
 
 //std::vector<std::pair <double, double>  >
 //get_radial_data(    const PixelArray2d<double>& bmp,
-//                    const CCD_Position& origin,
+//                    const CcdPosition& origin,
 //                    const double max_radius,
 //                    const PixelArray2d<double>& data_mask){
 //    return get_radial_data(bmp, bmp.corresponding_frame_Position(origin), max_radius,data_mask);

@@ -6,7 +6,7 @@
 #include "coela_core/src/ds9_region.h"
 #include "coela_core/src/cartesian_coords.h"
 
-//#include "../level2/file_info.h"
+//#include "../level2/FileInfo.h"
 //#include "../level1/ds9_interface.h"
 #include <boost/filesystem.hpp>
 #include <ctime>
@@ -29,9 +29,9 @@ namespace coela {
 using namespace string_utils;
 
 
-std::ostream& operator<<(std::ostream& os, const multi_ccd_region& c_rgn)
+std::ostream& operator<<(std::ostream& os, const MultiCcdRegion& c_rgn)
 {
-    os<<c_rgn.CCD_id <<"   " <<(CCD_BoxRegion)c_rgn;
+    os<<c_rgn.CCD_id <<"   " <<(CcdBoxRegion)c_rgn;
     return os;
 }
 
@@ -50,10 +50,10 @@ DrizzleSettings::DrizzleSettings(const string& filename)
     parse_DrizzleSettings_text_vec(file_utils::convert_text_file_to_string_vec(filename));
 }
 
-vector<CCD_BoxRegion> multi_ccd_region::pull_regions_for_cam_id(int cam_id,
-        vector<multi_ccd_region>& rgns)
+vector<CcdBoxRegion> MultiCcdRegion::pull_regions_for_cam_id(int cam_id,
+        vector<MultiCcdRegion>& rgns)
 {
-    vector<CCD_BoxRegion> relevant_rgns;
+    vector<CcdBoxRegion> relevant_rgns;
     for (size_t i=0; i!=rgns.size(); ++i) {
         if (rgns[i].CCD_id==cam_id) {
             relevant_rgns.push_back(rgns[i]);
@@ -64,22 +64,22 @@ vector<CCD_BoxRegion> multi_ccd_region::pull_regions_for_cam_id(int cam_id,
     return relevant_rgns;
 }
 
-void multi_ccd_region::push_regions_with_cam_id(vector<multi_ccd_region>&
-        camera_region_list, const vector<CCD_BoxRegion>& ccd_rgns ,int cam_id)
+void MultiCcdRegion::push_regions_with_cam_id(vector<MultiCcdRegion>&
+        camera_region_list, const vector<CcdBoxRegion>& ccd_rgns ,int cam_id)
 {
     for (size_t i=0; i!=ccd_rgns.size(); ++i) {
-        camera_region_list.push_back(multi_ccd_region(cam_id, ccd_rgns[i]));
+        camera_region_list.push_back(MultiCcdRegion(cam_id, ccd_rgns[i]));
     }
 }
 
 
 //    void lucky_settings::update_gs_regions(const string& long_exposure_filename, const int camera_id){
-//           vector<CCD_BoxRegion> cam_regions  = multi_ccd_region::pull_regions_for_cam_id(camera_id, guide_regions);
+//           vector<CcdBoxRegion> cam_regions  = MultiCcdRegion::pull_regions_for_cam_id(camera_id, guide_regions);
 //           cam_regions = ds9::get_CCD_regions(long_exposure_filename,"Update GS regions" ,cam_regions);
 //            //FIXME Clear the guide region here to avoid duplicated - but must only clear those relevant to cam id
 //           //i.e. guide_regions.clear_cameraXregions
 //           for (size_t j=0; j< cam_regions.size(); j++)
-//               guide_regions.push_back(multi_ccd_region(camera_id, cam_regions[j]));
+//               guide_regions.push_back(MultiCcdRegion(camera_id, cam_regions[j]));
 //    }
 void DrizzleSettings::write_to_file(const string& filename)
 {
