@@ -1,5 +1,5 @@
 /*
- * File:   PixelArrayHeader.h
+ * File:   pixel_array_header.h
  * Author: ts337
  *
  * Created on 08 February 2011, 17:05
@@ -10,7 +10,7 @@
 //#include "../level1/coords.h"
 
 #include "fits_header_conventions.h"
-#include "FitsHeader.h"
+#include "fits_header.h"
 #include "pixel_index.h"
 
 

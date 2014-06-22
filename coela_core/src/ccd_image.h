@@ -9,7 +9,7 @@
 #define COELA_CCD_IMAGE_H
 
 #include "pixel_array2d.h"
-#include "ImageGrid.h"
+#include "image_grid.h"
 
 namespace coela {
 //=========================================================================================================

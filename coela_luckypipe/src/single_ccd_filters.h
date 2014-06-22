@@ -1,5 +1,5 @@
 /*
- * File:   single_CCD_filters.h
+ * File:   single_ccd_filters.h
  * Author: ts337
  *
  * Created on 22 February 2011, 17:53
@@ -8,7 +8,7 @@
 #ifndef COELA_SINGLE_CCD_FILTERS_H
 #define COELA_SINGLE_CCD_FILTERS_H
 
-#include "coela_utility/src/FileBuffer.h"
+#include "coela_utility/src/file_buffer.h"
 #include "coela_utility/src/histogram_container.h"
 #include "coela_core/src/mosaic_image.h"
 #include "frame_info.h"

@@ -1,5 +1,5 @@
 /*
- * File:   DS9Region.h
+ * File:   ds9_region.h
  * Author: ts337
  *
  * Created on 24 November 2008, 15:23

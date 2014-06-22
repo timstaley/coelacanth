@@ -1,5 +1,5 @@
 #include <UnitTest++/UnitTest++.h>
-#include "../DS9Region.h"
+#include "../ds9_region.h"
 
 #include <iostream>
 #include <sstream>

@@ -14,9 +14,9 @@
 #include <list>
 #include <istream>
 #include "coela_utility/src/file_utils.h"
-#include "coela_core/src/FitsHeader.h"
+#include "coela_core/src/fits_header.h"
 
-//#include "../level1/lucky_FileBuffer.h"
+//#include "../level1/lucky_file_buffer.h"
 using std::string;
 ///This stores information about where a frame is stored;
 ///whether the frame is a single file or part of an LCM.

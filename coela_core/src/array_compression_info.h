@@ -8,7 +8,7 @@
 #ifndef COELA_ARRAY_COMPRESSION_INFO_H
 #define COELA_ARRAY_COMPRESSION_INFO_H
 
-#include "FitsHeader.h"
+#include "fits_header.h"
 
 namespace coela {
 //=============================================================================

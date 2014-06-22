@@ -3,7 +3,7 @@
 #include "../gain_utils.h"
 #include "coela_utility/src/string_utils.h"
 
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 
 #include "coela_utility/src/microstats.h"
 
@@ -139,7 +139,7 @@ map<int, double> convolve_histogram_with_gaussian(const map<int, double>& input_
 
     const int kernel_min(-kernel_half_width), kernel_max(kernel_half_width);
     for (int value = kernel_min ; value <= kernel_max; ++value) {
-        readout_kernel[value] = lucky_math::gaussian_1d_function(value,
+        readout_kernel[value] = misc_math::gaussian_1d_function(value,
                                 unity_area_gaussian_height,
                                 readout_sigma);
     }
@@ -194,7 +194,7 @@ map<int,double> gaussian_histogram_fit_FCN::get_model_histogram(
 {
     map<int,double>model;
     for (map<int,long>::const_iterator it=data.begin(); it!=data.end(); ++it) {
-        model[it->first] = lucky_math::gaussian_1d_function((double)it->first - gauss_pars[0],
+        model[it->first] = misc_math::gaussian_1d_function((double)it->first - gauss_pars[0],
                            gauss_pars[1],
                            gauss_pars[2]);  //FIXME -- should perhaps be measuring distance from centre of bin? (so +0.5 to it->first). but not sure.
     }
@@ -792,7 +792,7 @@ vector<double> fit_readout_gaussian(const map<int,long>& histogram_data,
 //            gauss_pars.SetLimits("HistPeakCount", peak.first*0.5, peak.first*2.0);
     gauss_pars.SetLowerLimit("HistPeakCount",5);
     float gauss_sigma_est = get_gaussian_HWHM(histogram_data) * 2 /
-                            lucky_math::gaussian_fwhm_to_sigma_ratio;
+                            misc_math::gaussian_fwhm_to_sigma_ratio;
     if (output_to_screen) { cout <<"Sigma init est. " << gauss_sigma_est <<endl; }
 
     gauss_pars.Add("HistGaussSigma", gauss_sigma_est, gauss_sigma_est*0.3);

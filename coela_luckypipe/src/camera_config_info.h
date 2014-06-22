@@ -9,7 +9,7 @@
 #define COELA_CAMERA_CONFIG_INFO_H
 
 #include "coela_core/src/cartesian_coords.h"
-#include "CCD_dataset_info.h"
+#include "ccd_dataset_info.h"
 
 #include <string>
 #include <vector>

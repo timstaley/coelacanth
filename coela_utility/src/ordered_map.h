@@ -1,5 +1,5 @@
 /*
- * File:   FitsHeader.h
+ * File:   fits_header.h
  * Author: ts337
  *
  * Created on 06 November 2008, 13:24

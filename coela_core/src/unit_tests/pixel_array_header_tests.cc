@@ -1,5 +1,5 @@
 #include <UnitTest++/UnitTest++.h>
-#include "../PixelArrayHeader.h"
+#include "../pixel_array_header.h"
 
 
 

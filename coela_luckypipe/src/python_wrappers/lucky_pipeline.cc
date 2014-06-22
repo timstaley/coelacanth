@@ -2,7 +2,7 @@
 #include <boost/python/data_members.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include "../CCD_dataset_info.h"
+#include "../ccd_dataset_info.h"
 #include "../drizzle_settings.h"
 
 

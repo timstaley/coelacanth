@@ -6,7 +6,7 @@
 #include "coela_utility/src/microstats.h"
 
 
-#include "coela_core/src/PixelArrayHeader.h"
+#include "coela_core/src/pixel_array_header.h"
 //#include "../fits_header.h"
 //#include "../list_analysis_code/list_analysis.h"
 #include <boost/filesystem.hpp>

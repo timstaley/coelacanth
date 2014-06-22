@@ -1,7 +1,7 @@
 
 #include <UnitTest++/UnitTest++.h>
 #include <stdexcept>
-#include "../lucky_math_funcs.h"
+#include "../misc_math.h"
 #include <iostream>
 #include <boost/math/distributions/poisson.hpp>
 #include <limits>
@@ -10,12 +10,12 @@
 using namespace coela;
 using namespace std;
 
-SUITE(lucky_math)
+SUITE(misc_math)
 {
-    using namespace lucky_math;
+    using namespace misc_math;
 
     TEST(Notify_Suite_Has_Been_Run) {
-        cout << "*** \"lucky_math\" unit tests running ***" <<endl;
+        cout << "*** \"misc_math\" unit tests running ***" <<endl;
     }
 
     TEST(integer_factorial) {

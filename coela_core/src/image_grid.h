@@ -1,5 +1,5 @@
 /*
- * File:   ImageGrid.h
+ * File:   image_grid.h
  * Author: ts337
  *
  * Created on 14 February 2011, 16:51
@@ -9,7 +9,7 @@
 #define COELA_IMAGE_REGION_H
 
 #include "cartesian_coords.h"
-#include "FitsHeader.h"
+#include "fits_header.h"
 
 namespace coela {
 //===============================================================

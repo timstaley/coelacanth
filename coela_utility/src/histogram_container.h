@@ -14,9 +14,9 @@ using std::vector;
 
 namespace coela {
 
-//TO DO - this class needs re-writing.
 
-///Wraps a vector so that essentially we use it as an array of pairs - the indices corresponds to a histogram value, the indexed memory corresponds to the counts
+///Wraps a vector so that essentially we use it as an array of pairs -
+///the indices corresponds to a histogram value, the indexed memory corresponds to the counts
 struct HistogramContainer14bit: public vector<long> {
     HistogramContainer14bit(): vector<long>(fourteen_bit_range+1, 0), pixels_counted(0),
         zero_index_value(0), max_index_value(fourteen_bit_range), min_val_set(false) {}

@@ -1,7 +1,7 @@
 #include "../clean_and_register_subroutines.h"
 #include <utility>
 #include <iostream>
-#include <coela_utility/src/lucky_math_funcs.h>
+#include <coela_utility/src/misc_math.h>
 #include <coela_core/src/convolution.h>
 #include "coela_core/src/pixel_array_routines.h"
 using std::endl;
@@ -301,7 +301,7 @@ psf_models::reference_psf generate_airy_core_template(
 {
 
     double rads_per_CCD_pixel =
-        camconf.lens_inf.nominal_pixel_scale_in_mas*lucky_math::radians_per_milliarcsecond;
+        camconf.lens_inf.nominal_pixel_scale_in_mas*misc_math::radians_per_milliarcsecond;
     psf_models::airy_psf_model airy_gen(
         100, rads_per_CCD_pixel,
         camconf.get_filter_info_for_ccd_id(ccd_id).central_wavelength_in_metres,
@@ -393,9 +393,9 @@ psf_models::reference_psf generate_normalised_core_template(
 ////
 ////    double airy_fwhm_CCD_pix = airy_fwhm_radians / rads_per_CCD_pixel;
 ////    double airy_gauss_approx_sigma = airy_fwhm_CCD_pix /
-////        lucky_math::gaussian_fwhm_to_sigma_ratio;
+////        misc_math::gaussian_fwhm_to_sigma_ratio;
 ////    double pixel_approx_sigma = 1.0 /
-////        lucky_math::gaussian_fwhm_to_sigma_ratio;
+////        misc_math::gaussian_fwhm_to_sigma_ratio;
 ////
 ////    double convolved_sigma = sqrt(pixel_approx_sigma*pixel_approx_sigma +
 ////        airy_gauss_approx_sigma + airy_gauss_approx_sigma);

@@ -1,5 +1,5 @@
 /*
- * File:   CCD_dataset_info.h
+ * File:   ccd_dataset_info.h
  * Author: ts337
  *
  * Created on 15 March 2011, 12:01

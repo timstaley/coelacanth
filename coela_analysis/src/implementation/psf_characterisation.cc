@@ -3,7 +3,7 @@
 #include <fstream>
 #include <algorithm>
 #include "coela_utility/src/microstats.h"
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 
 #include <iostream>
 
@@ -46,7 +46,7 @@ double estimate_radius_of_avg_value(const PixelArray2d<double>& bmp,
             "(img coords: " + ftoa(origin.x)+","+ftoa(origin.y)+"), value " + ftoa(bmp(
                         PixelPosition::pixel_containing_point(origin)))+"."
         );
-    return lucky_math::linearly_interpolate(
+    return misc_math::linearly_interpolate(
                profile[radius_index-1].mean_value, profile[radius_index-1].avg_radius,
                profile[radius_index].mean_value, profile[radius_index].avg_radius, pixel_level);
 }
@@ -77,7 +77,7 @@ double estimate_radius_to_enclose_flux(const PixelArray2d<double>& bmp,
     double next_flux_sum = prev_flux_sum +
                            profile[radius_index].mean_value*profile[radius_index].n_samples;
 
-    return lucky_math::linearly_interpolate(
+    return misc_math::linearly_interpolate(
                prev_flux_sum, profile[radius_index-1].avg_radius, next_flux_sum,
                profile[radius_index].avg_radius, flux_sum_to_enclose);
 
@@ -91,7 +91,7 @@ double estimate_radius_to_enclose_flux(const PixelArray2d<double>& bmp,
 //     double sum_flux=0.0;
 //
 //     size_t index;
-//     for (index=0; index!=raw_data.size() && sum_flux < (flux_sum_to_enclose - lucky_math::err_margin) ; ++index){
+//     for (index=0; index!=raw_data.size() && sum_flux < (flux_sum_to_enclose - misc_math::err_margin) ; ++index){
 //         prev_sum_flux = sum_flux;
 //         sum_flux += raw_data[index].second;
 //     }
@@ -106,7 +106,7 @@ double estimate_radius_to_enclose_flux(const PixelArray2d<double>& bmp,
 //     cout<<"Previous point: " <<raw_data[index-2].first<< " "<< prev_sum_flux<<endl;
 //     cout<<"Above point: " <<raw_data[index-1].first<< " "<< prev_sum_flux<<endl;
 //
-//     return lucky_math::linearly_interpolate(
+//     return misc_math::linearly_interpolate(
 //             prev_sum_flux, raw_data[index-2].first, sum_flux, raw_data[index-1].first, flux_sum_to_enclose   );
 }
 
@@ -154,7 +154,7 @@ double estimate_encircled_flux_at_pixel_radius(const PixelArray2d<double>& bmp,
     double next_flux_sum = prev_flux_sum +
                            profile[radius_index].mean_value*profile[radius_index].n_samples;
 
-    return lucky_math::linearly_interpolate(
+    return misc_math::linearly_interpolate(
                profile[radius_index-1].avg_radius, prev_flux_sum,
                profile[radius_index].avg_radius, next_flux_sum,
                flux_aperture_pixel_radius);
@@ -367,15 +367,15 @@ psf_profile_point interpolate_profile_to_radius(const vector<psf_profile_point>&
     psf_profile_point interp_pt;
     interp_pt.avg_radius=interp_radius;
     interp_pt.mean_value=
-        lucky_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.mean_value,
+        misc_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.mean_value,
                                          next_pt.avg_radius, next_pt.mean_value,
                                          interp_radius);
     interp_pt.median_value =
-        lucky_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.median_value,
+        misc_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.median_value,
                                          next_pt.avg_radius, next_pt.median_value,
                                          interp_radius);
     interp_pt.std_dev=
-        lucky_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.std_dev,
+        misc_math::linearly_interpolate(prev_pt.avg_radius, prev_pt.std_dev,
                                          next_pt.avg_radius, next_pt.std_dev,
                                          interp_radius);
     interp_pt.n_samples=1;

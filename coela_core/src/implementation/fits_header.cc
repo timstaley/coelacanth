@@ -6,7 +6,7 @@
  */
 
 //#include "coela_utility/src/my_debug_config.h"
-#include "coela_core/src/FitsHeader.h"
+#include "coela_core/src/fits_header.h"
 
 #include "coela_utility/src/string_utils.h"
 #include "coela_core/src/fits_header_conventions.h"

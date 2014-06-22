@@ -1,5 +1,5 @@
 /*
- * File:   multi_CCD_filters.h
+ * File:   multi_ccd_filters.h
  * Author: ts337
  *
  * Created on 14 March 2011, 19:47
@@ -8,14 +8,14 @@
 #ifndef COELA_MULTI_CCD_FILTERS_H
 #define COELA_MULTI_CCD_FILTERS_H
 
-#include "coela_utility/src/FileBuffer.h"
+#include "coela_utility/src/file_buffer.h"
 #include "camera_config_info.h"
 #include "drizzle_settings.h"
 #include "coela_core/src/ccd_image.h"
 #include "gain_utils.h"
 #include "frame_info.h"
 #include "frame_registration.h"
-#include "single_CCD_filters.h"
+#include "single_ccd_filters.h"
 #include "drizzle_subroutines.h"
 
 #include <tbb/pipeline.h>

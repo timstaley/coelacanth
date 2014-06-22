@@ -7,13 +7,13 @@
 
 #include "coela_core/src/image_utils.h"
 #include "coela_core/src/pixel_array_routines.h"
-#include "coela_core/src/DS9Region.h"
+#include "coela_core/src/ds9_region.h"
 
-#include "coela_luckypipe/src/CCD_dataset_info.h"
+#include "coela_luckypipe/src/ccd_dataset_info.h"
 #include "coela_luckypipe/src/camera_config_info.h"
 
 #include "coela_luckypipe/src/gain_utils.h"
-#include "coela_luckypipe/src/single_CCD_filters.h"
+#include "coela_luckypipe/src/single_ccd_filters.h"
 #include "coela_luckypipe/src/image_cleanup.h"
 #include "coela_luckypipe/src/frame_info.h"
 #include "coela_analysis/src/psf_generation.h"

@@ -1,17 +1,17 @@
 /*
- * File:   lucky_math_funcs.h
+ * File:   misc_math.h
  * Author: ts337
  *
  * Created on 11 April 2009, 19:49
  */
 
-#ifndef COELA_MATH_FUNCS_H
-#define COELA_MATH_FUNCS_H
+#ifndef misc_math_FUNCS_H
+#define misc_math_FUNCS_H
 #include <cmath>
 #include <utility>
 
 namespace coela {
-namespace lucky_math {
+namespace misc_math {
 
 const double err_margin=1e-6;
 
@@ -65,7 +65,7 @@ double bilinear_interpolate(double x, double y,
 inline int auxCeil(float x) { return (float)(long)(x+0.999999f) ;} //This is the closest we can get to 1.0 without it rounding up by 1.0.
 
 
-}//end namespace coela::math
+}//end namespace coela::misc_math
 }//end namespace coela
 
 

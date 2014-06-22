@@ -5,7 +5,7 @@
  * Created on 08 February 2011, 17:05
  */
 
-#include "../PixelArrayHeader.h"
+#include "../pixel_array_header.h"
 #include "coela_utility/src/string_utils.h"
 #include <stdexcept>
 

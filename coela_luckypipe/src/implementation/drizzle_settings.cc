@@ -3,7 +3,7 @@
 #include "coela_utility/src/string_utils.h"
 #include "coela_utility/src/file_utils.h"
 #include "coela_utility/src/simple_serialization.h"
-#include "coela_core/src/DS9Region.h"
+#include "coela_core/src/ds9_region.h"
 #include "coela_core/src/cartesian_coords.h"
 
 //#include "../level2/file_info.h"

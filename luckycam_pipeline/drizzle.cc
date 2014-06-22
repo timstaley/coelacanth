@@ -5,21 +5,21 @@
  * Created on 15 March 2011, 15:27
  */
 
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 
 #include "coela_core/src/image_utils.h"
-#include "coela_core/src/DS9Region.h"
+#include "coela_core/src/ds9_region.h"
 #include "coela_core/src/drizzle.h"
 
-#include "coela_luckypipe/src/CCD_dataset_info.h"
+#include "coela_luckypipe/src/ccd_dataset_info.h"
 #include "coela_luckypipe/src/camera_config_info.h"
 
 #include "coela_luckypipe/src/gain_utils.h"
 #include "coela_luckypipe/src/image_cleanup.h"
 #include "coela_luckypipe/src/frame_info.h"
 
-#include "coela_luckypipe/src/single_CCD_filters.h"
-#include "coela_luckypipe/src/multi_CCD_filters.h"
+#include "coela_luckypipe/src/single_ccd_filters.h"
+#include "coela_luckypipe/src/multi_ccd_filters.h"
 
 #include "coela_luckypipe/src/drizzle_subroutines.h"
 

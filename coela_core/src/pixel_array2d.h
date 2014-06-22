@@ -9,7 +9,7 @@
 #define COELA_PIXEL_ARRAY_H
 
 
-#include "PixelArrayHeader.h"
+#include "pixel_array_header.h"
 #include "array_compression_info.h"
 
 

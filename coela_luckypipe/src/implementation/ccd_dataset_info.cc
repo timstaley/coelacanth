@@ -1,4 +1,4 @@
-#include "../CCD_dataset_info.h"
+#include "../ccd_dataset_info.h"
 #include "coela_utility/src/string_utils.h"
 #include "coela_utility/src/file_utils.h"
 #include "coela_utility/src/simple_serialization.h"

@@ -9,7 +9,7 @@
 #define COELA_DRIZZLE_SUBROUTINES_H
 #include "coela_core/src/mosaic_image.h"
 #include "gain_utils.h"
-#include "CCD_dataset_info.h"
+#include "ccd_dataset_info.h"
 #include "drizzle_settings.h"
 #include "camera_config_info.h"
 

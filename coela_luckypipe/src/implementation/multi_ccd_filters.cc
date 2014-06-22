@@ -1,4 +1,4 @@
-#include "../multi_CCD_filters.h"
+#include "../multi_ccd_filters.h"
 
 #include "../gain_utils.h"
 #include "../image_cleanup.h"

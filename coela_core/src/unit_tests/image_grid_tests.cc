@@ -1,6 +1,6 @@
 #include <UnitTest++/UnitTest++.h>
 #include <sstream>
-#include "../ImageGrid.h"
+#include "../image_grid.h"
 #include <iostream>
 
 using namespace coela;

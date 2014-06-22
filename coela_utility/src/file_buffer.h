@@ -1,5 +1,5 @@
 /*
- * File:   lucky_FileBuffer.h
+ * File:   lucky_file_buffer.h
  * Author: ts337
  *
  * Created on 07 August 2009, 13:51

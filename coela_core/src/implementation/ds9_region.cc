@@ -1,4 +1,4 @@
-#include "../DS9Region.h"
+#include "../ds9_region.h"
 #include "coela_utility/src/string_utils.h"
 
 #include <fstream>

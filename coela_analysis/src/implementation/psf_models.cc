@@ -6,7 +6,7 @@
  */
 
 #include "../psf_models.h"
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 #include "coela_utility/src/string_utils.h"
 #include <stdexcept>
 
@@ -124,7 +124,7 @@ airy_psf_model::airy_psf_model(double peak_value, double rads_per_CCD_pixel,
 double airy_psf_model::operator()(double radius_in_CCD_pix) const
 {
     return peak_val*
-           lucky_math::airy_function(radius_in_CCD_pix*rads_per_CCD_pix,
+           misc_math::airy_function(radius_in_CCD_pix*rads_per_CCD_pix,
                                      wavelength, aperture_diameter, obscuration_diameter);
 }
 
@@ -142,7 +142,7 @@ gaussian_psf_model::gaussian_psf_model(double peak_value,
 
 double gaussian_psf_model::operator()(double radius_in_CCD_pix) const
 {
-    return lucky_math::gaussian_1d_function(radius_in_CCD_pix, peak_val, sigma_in_CCD_pix);
+    return misc_math::gaussian_1d_function(radius_in_CCD_pix, peak_val, sigma_in_CCD_pix);
 }
 
 //================================================================================

@@ -1,4 +1,4 @@
-#include "../lucky_math_funcs.h"
+#include "../misc_math.h"
 #include "../string_utils.h"
 #include <boost/math/special_functions/bessel.hpp>
 #include <algorithm>
@@ -8,7 +8,7 @@
 
 using namespace std;
 namespace coela {
-namespace lucky_math {
+namespace misc_math {
 
 
 

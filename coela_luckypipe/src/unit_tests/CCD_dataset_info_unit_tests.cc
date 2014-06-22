@@ -1,6 +1,6 @@
 
 #include <UnitTest++/UnitTest++.h>
-#include "../CCD_dataset_info.h"
+#include "../ccd_dataset_info.h"
 
 #include <iostream>
 #include <fstream>

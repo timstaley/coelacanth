@@ -6,7 +6,7 @@
  */
 
 #include "../minuit_psf_models.h"
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 namespace coela {
 namespace psf_fitting {
 namespace Mn2_models {
@@ -62,7 +62,7 @@ double gaussian_psf::operator()(const CCD_PixelShift& offset,
 {
     assert(psf_params.size()==2);
     double radius = offset.length();
-    return lucky_math::gaussian_1d_function(radius, psf_params[0], psf_params[1]);
+    return misc_math::gaussian_1d_function(radius, psf_params[0], psf_params[1]);
 }
 //-------------------------------------------------------------------------------
 void gaussian_psf::set_MnPars_from_PSF_Fit(

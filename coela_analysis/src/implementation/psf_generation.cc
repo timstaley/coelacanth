@@ -6,7 +6,7 @@
  */
 
 #include "../psf_generation.h"
-#include "coela_utility/src/lucky_math_funcs.h"
+#include "coela_utility/src/misc_math.h"
 #include "coela_core/src/image_utils.h"
 #include "coela_core/src/pixel_array_routines.h"
 #include "coela_utility/src/string_utils.h"

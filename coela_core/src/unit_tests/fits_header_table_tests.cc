@@ -1,6 +1,6 @@
 #include <UnitTest++/UnitTest++.h>
 #include <sstream>
-#include "../FitsHeader.h"
+#include "../fits_header.h"
 #include "coela_utility/src/string_utils.h"
 #include <iostream>
 #include <fstream>

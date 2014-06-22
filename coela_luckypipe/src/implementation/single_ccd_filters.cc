@@ -5,7 +5,7 @@
  * Created on 22 February 2011, 17:53
  */
 
-#include "../single_CCD_filters.h"
+#include "../single_ccd_filters.h"
 #include "../image_cleanup.h"
 #include "../gain_utils.h"
 #include "coela_core/src/image_utils.h"

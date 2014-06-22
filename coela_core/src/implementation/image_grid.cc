@@ -1,4 +1,4 @@
-#include "../ImageGrid.h"
+#include "../image_grid.h"
 #include "coela_utility/src/string_utils.h"
 
 using namespace std;

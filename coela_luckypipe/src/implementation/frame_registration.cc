@@ -4,7 +4,7 @@
 #include <utility>
 #include <stdexcept>
 #include <iostream>
-#include <coela_utility/src/lucky_math_funcs.h>
+#include <coela_utility/src/misc_math.h>
 using std::cerr; using std::endl;
 using std::pair;
 namespace coela {
@@ -117,7 +117,7 @@ gs_lock<CCD_Position> find_best_psf_match(
             } else {
                 //Now we can perform parabolic interpolation, first in the x direction:
                 pair<double, double> x_interp_pos_val =
-                    lucky_math::fit_1d_parabola_to_find_local_maxima(
+                    misc_math::fit_1d_parabola_to_find_local_maxima(
                         conv_peak_position.x,
                         convolution.pix(PixelIndex(conv_peak_pixel.x-1, conv_peak_pixel.y)),
                         conv_peak,
@@ -126,7 +126,7 @@ gs_lock<CCD_Position> find_best_psf_match(
 
                 //And then y direction
                 pair<double, double> y_interp_pos_val =
-                    lucky_math::fit_1d_parabola_to_find_local_maxima(
+                    misc_math::fit_1d_parabola_to_find_local_maxima(
                         conv_peak_position.y,
                         convolution.pix(PixelIndex(conv_peak_pixel.x, conv_peak_pixel.y-1)),
                         conv_peak,

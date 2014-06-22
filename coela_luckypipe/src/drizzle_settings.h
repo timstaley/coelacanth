@@ -8,7 +8,7 @@
 #ifndef COELA_SETTINGS_H
 #define COELA_SETTINGS_H
 #include "coela_core/src/cartesian_coords.h"
-#include "CCD_dataset_info.h"
+#include "ccd_dataset_info.h"
 #include "frame_info.h"
 
 #include <string>

@@ -1,5 +1,5 @@
 /*
- * File:   FitsHeader.h
+ * File:   fits_header.h
  * Author: ts337
  *
  * Created on 07 February 2011, 14:18
@@ -8,8 +8,8 @@
 #ifndef COELA_FITS_HEADER_TABLE_H
 #define COELA_FITS_HEADER_TABLE_H
 
-#include "coela_utility/src/OrderedMap.h"
-#include "coela_utility/src/FileBuffer.h"
+#include "coela_utility/src/ordered_map.h"
+#include "coela_utility/src/file_buffer.h"
 #include "fits_header_conventions.h"
 
 #include <istream>

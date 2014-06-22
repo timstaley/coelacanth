@@ -6,7 +6,7 @@
  */
 #include <UnitTest++/UnitTest++.h>
 #include <stdexcept>
-#include "../OrderedMap.h"
+#include "../ordered_map.h"
 #include <iostream>
 
 using namespace coela;
